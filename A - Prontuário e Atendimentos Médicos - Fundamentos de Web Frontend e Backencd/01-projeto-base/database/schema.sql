@@ -31,3 +31,12 @@ CREATE TABLE patients (
 -- Nao esqueca da chave estrangeira:
 --   FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
 -- ------------------------------------------------------------
+
+CREATE TABLE encounters (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  patient_id        INTEGER NOT NULL,  --> referencia patients(id)
+  started_at        TEXT    NOT NULL,  --> ISO 8601 (AAAA-MM-DDTHH:MM)
+  chief_complaint   TEXT    NOT NULL,  --> queixa principal
+  notes             TEXT,              --> conduta / observacoes (opcional)
+  FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+);
