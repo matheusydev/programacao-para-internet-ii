@@ -93,7 +93,8 @@ function emptyStateTemplate(searchTerm) {
  * entender o React muito melhor depois de ter vivido isso.
  */
 export function renderPatientList(patients, searchTerm, container) {
-  // escreva aqui
+  const cards = patients.map(p => patientCardTemplate(p))
+  container.innerHTML = cards.join("")
 }
 
 /** Atualiza o contador de resultados. */
