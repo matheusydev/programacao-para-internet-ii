@@ -42,7 +42,11 @@ app.get("/api/health", (_request, response) => {
 // GET /api/patients  ->  200 com um ARRAY de pacientes.
 // Comece devolvendo um array fixo, escrito na mao. Sem banco ainda.
 // ============================================================
+app.get("/api/patients", (_request, response) => {
+  const pacientes = [];
 
+  response.status(200).json(pacientes);
+});
 // ============================================================
 // TODO 2 (Encontro 2, Pratica 2)
 // POST /api/patients
