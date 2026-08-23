@@ -67,11 +67,11 @@ app.get("/api/patients", (_request, response) => {
 // E crie GET /api/patients/:id devolvendo 404 quando nao existir.
 // ============================================================
 app.get("/api/patients/:id/encounters", (request, response) => {
-  const patientId = request.params.id;
+  const patient_id = request.params.id;
 
   const patient = db
     .prepare("SELECT id FROM patients WHERE id = ?")
-    .get(patientId);
+    .get(patient_id);
 
   if (!patient) {
     return response.status(404).json({ error: "Paciente não encontrado." });
@@ -79,11 +79,66 @@ app.get("/api/patients/:id/encounters", (request, response) => {
 
   const encounters = db
     .prepare("SELECT * FROM encounters WHERE patient_id = ?")
-    .all(patientId);
+    .all(patient_id);
 
-  response.status(200).json(encounters);
+  return response.status(200).json(encounters);
 });
 // ------------------------------------------------------------
+app.post("/api/patients/:id/encounters", (request,response) => {
+  const patient_id = request.params.id;
+
+  const {startedAt,chiefComplaint,notes} = request.body;
+
+  const patient = db
+    .prepare("SELECT id FROM patients WHERE id = ?")
+    .get(patient_id);
+  
+  if (!patient) {
+    return response
+      .status(404)
+      .json({error: "Paciente não encontrado.",});
+  }
+
+  if (typeof chiefComplaint !== "string" || chiefComplaint.trim() === ""){
+    return response
+      .status(400)
+      .json({error: "chiefComplaint é obrigatório.",})
+  }
+
+  if (typeof startedAt !== "string" ||  !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(startedAt)){
+    return response
+    .status(400)
+    .json({error: "startedAt deve estar no formato AAAA-MM-DDTHH:MM."})
+  }
+
+  const encounterNotes = typeof notes === "string" && notes.trim() !== ""
+    ? notes : null;
+  
+  const result = db
+    .prepare(`
+      INSERT INTO encounters (
+        patient_id,
+        started_at,
+        chief_complaint,
+        notes
+      )
+      VALUES (?, ?, ?, ?)
+    `)
+    .run(
+      patient_id,
+      startedAt,
+      chiefComplaint,
+      encounterNotes
+    );
+
+  const encounter = db
+    .prepare("SELECT * FROM encounters WHERE id = ?")
+    .get(result.lastInsertRowid);
+
+  return response.status(201).json(encounter);
+
+});
+
 app.listen(PORT, () => {
   console.log(`Mini-Prontuario no ar em http://localhost:${PORT}`);
 });
