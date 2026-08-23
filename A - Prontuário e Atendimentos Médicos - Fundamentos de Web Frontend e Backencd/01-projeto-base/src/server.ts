@@ -10,6 +10,7 @@
  * queremos e que voce saiba exatamente o que cada linha faz.
  */
 import express from "express";
+import { db } from "./database";
 
 const app = express();
 const PORT = 3000;
@@ -65,7 +66,17 @@ app.get("/api/patients", (_request, response) => {
 //   const rows = db.prepare("SELECT ... FROM patients ORDER BY name").all();
 // E crie GET /api/patients/:id devolvendo 404 quando nao existir.
 // ============================================================
+app.get("/api/patients/:id/encounters", (request, response) => {
+  const patientId = request.params.id;
 
+  const patient = db
+    .prepare("SELECT id FROM patients WHERE id = ?")
+    .get(patientId);
+
+  if (!patient) {
+    return response.status(404).json({ error: "Paciente não encontrado." });
+  }
+});
 // ------------------------------------------------------------
 app.listen(PORT, () => {
   console.log(`Mini-Prontuario no ar em http://localhost:${PORT}`);
