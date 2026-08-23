@@ -76,6 +76,12 @@ app.get("/api/patients/:id/encounters", (request, response) => {
   if (!patient) {
     return response.status(404).json({ error: "Paciente não encontrado." });
   }
+
+  const encounters = db
+    .prepare("SELECT * FROM encounters WHERE patient_id = ?")
+    .all(patientId);
+
+  response.status(200).json(encounters);
 });
 // ------------------------------------------------------------
 app.listen(PORT, () => {
