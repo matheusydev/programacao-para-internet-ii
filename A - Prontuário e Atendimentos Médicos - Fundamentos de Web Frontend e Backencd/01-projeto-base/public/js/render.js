@@ -36,6 +36,13 @@ function formatDate(isoDate) {
   return `${day}/${month}/${year}`;
 }
 
+function formatDateTime(value) {
+  const [date, time] = value.split("T");
+  const [year, month, day] = date.split("-");
+
+  return `${day}/${month}/${year} ${time}`;
+}
+
 /** Monta o HTML de UM cartão de paciente. */
 function patientCardTemplate(patient) {
   const cardModifier = patient.active ? "" : " patient-card--inactive";
@@ -125,6 +132,30 @@ export function renderError(message, container) {
         <p class="empty-state__title">Algo deu errado</p>
         <p class="m-0">${escapeHtml(message)}</p>
       </div>
+    </li>
+  `;
+}
+
+function encounterItemTemplate(encounter) {
+  return `
+    <li class="encounter-item">
+      <div class="encounter-item__header">
+        <strong class="encounter-item__date">
+          ${formatDateTime(encounter.started_at)}
+        </strong>
+      </div>
+      
+      <p class="encounter-item__complaint">
+        ${escapeHtml(encounter.chief_complaint)}
+      </p>
+      
+      ${
+        encounter.notes
+          ? `<p class="encounter-item__notes">
+            ${escapeHtml(encounter.notes)}
+            </p>`
+          : ""
+      }
     </li>
   `;
 }
