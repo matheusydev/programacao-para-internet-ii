@@ -41,13 +41,15 @@ app.get("/api/health", (_request, response) => {
 // ============================================================
 // TODO 1 (Encontro 2, Pratica 1)
 // GET /api/patients  ->  200 com um ARRAY de pacientes.
-// Comece devolvendo um array fixo, escrito na mao. Sem banco ainda.
 // ============================================================
 app.get("/api/patients", (_request, response) => {
-  const pacientes = [];
+  const pacientes = db
+    .prepare("SELECT * FROM patients ORDER BY name")
+    .all();
 
   response.status(200).json(pacientes);
 });
+
 // ============================================================
 // TODO 2 (Encontro 2, Pratica 2)
 // POST /api/patients
@@ -58,14 +60,65 @@ app.get("/api/patients", (_request, response) => {
 //   - se invalido:  400  { "error": "mensagem util" }
 //   - se valido:    201  com o paciente criado
 // ============================================================
+app.post("/api/patients", (request, response) => {
+  const { name, birthDate, nationalId } = request.body ?? {};
+
+  if (typeof name !== "string" || name.trim() === "") {
+    return response.status(400).json({ error: "name é obrigatório." });
+  }
+
+  if (typeof birthDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
+    return response
+      .status(400)
+      .json({ error: "birthDate deve estar no formato AAAA-MM-DD." });
+  }
+
+  if (typeof nationalId !== "string" || nationalId.trim() === "") {
+    return response.status(400).json({ error: "nationalId é obrigatório." });
+  }
+
+  const existente = db
+    .prepare("SELECT id FROM patients WHERE national_id = ?")
+    .get(nationalId);
+
+  if (existente) {
+    return response
+      .status(409)
+      .json({ error: "Já existe um paciente com esse nationalId." });
+  }
+
+  const result = db
+    .prepare(`
+      INSERT INTO patients (name, birth_date, national_id)
+      VALUES (?, ?, ?)
+    `)
+    .run(name, birthDate, nationalId);
+
+  const patient = db
+    .prepare("SELECT * FROM patients WHERE id = ?")
+    .get(result.lastInsertRowid);
+
+  return response.status(201).json(patient);
+});
 
 // ============================================================
 // TODO 3 (Encontro 2, Pratica 3)
-// Troque o array em memoria pelo banco:
-//   import { db } from "./database";
-//   const rows = db.prepare("SELECT ... FROM patients ORDER BY name").all();
-// E crie GET /api/patients/:id devolvendo 404 quando nao existir.
+// GET /api/patients/:id  ->  200 com o paciente, ou 404 se nao existir.
 // ============================================================
+app.get("/api/patients/:id", (request, response) => {
+  const { id } = request.params;
+
+  const patient = db
+    .prepare("SELECT * FROM patients WHERE id = ?")
+    .get(id);
+
+  if (!patient) {
+    return response.status(404).json({ error: "Paciente não encontrado." });
+  }
+
+  return response.status(200).json(patient);
+});
+
 app.get("/api/patients/:id/encounters", (request, response) => {
   const patient_id = request.params.id;
 
