@@ -102,10 +102,6 @@ Content-Type: application/json
 ### 14. FALHA PROPOSITAL: GET paciente inexistente -> esperado 404
 GET {{host}}/api/patients/9999/encounters
 
-### 14. FALHA PROPOSITAL: GET paciente inexistente -> esperado 404
-GET {{host}}/api/patients/9999/encounters
-
-
 ### 15. FALHA PROPOSITAL: startedAt inválido -> esperado 400
 POST {{host}}/api/patients/1/encounters
 Content-Type: application/json
@@ -115,7 +111,6 @@ Content-Type: application/json
   "chiefComplaint": "Teste"
 }
 
-
 ### 16. FALHA PROPOSITAL: chiefComplaint somente espaços -> esperado 400
 POST {{host}}/api/patients/1/encounters
 Content-Type: application/json
@@ -124,7 +119,6 @@ Content-Type: application/json
   "startedAt": "2026-08-17T09:30",
   "chiefComplaint": "     "
 }
-
 
 ### 17. notes ausente -> esperado 201 e notes null
 POST {{host}}/api/patients/1/encounters

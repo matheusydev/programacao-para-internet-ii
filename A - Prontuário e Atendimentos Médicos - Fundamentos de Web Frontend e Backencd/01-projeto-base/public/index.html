@@ -56,6 +56,42 @@
     <!-- A lista é desenhada por render.js. Ela nasce vazia de propósito. -->
     <ul id="patient-list" class="patient-list"></ul>
 
+    <form id="encounter-form">
+        <div>
+          <label for="started-at">Data e hora</label>
+          <input
+            id="started-at"
+            name="startedAt"
+            type="datetime-local"
+            required
+          >
+        </div>
+
+        <div>
+          <label for="chief-complaint">Queixa principal</label>
+          <input
+            id="chief-complaint"
+            name="chiefComplaint"
+            type="text"
+            required
+          >
+        </div>
+
+        <div>
+          <label for="notes">Observações</label>
+          <textarea 
+            id="notes"
+            name="notes"
+          ></textarea>
+        </div>
+
+        <button type="submit">
+          Registrar atendimento
+        </button>
+
+        <p id="encounter-form-error"></p>
+    </form>
+
   </main>
 
   <!-- type="module" habilita import/export no navegador -->

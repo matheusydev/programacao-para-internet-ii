@@ -26,6 +26,11 @@ const state = {
   onlyActive: false,
   isLoading: true,
   errorMessage: null,
+  selectedPatient: null,
+  encounters: [],
+  encountersLoading: false,
+  encountersError: null,
+  formError: null,
 };
 
 /** Quem quer ser avisado quando o estado mudar. */
@@ -113,5 +118,34 @@ export function setOnlyActive(onlyActive) {
 export function setError(message) {
   state.errorMessage = message;
   state.isLoading = false;
+  notify();
+}
+
+export function setSelectedPatient(patient) {
+  state.selectedPatient = patient;
+  notify();
+}
+
+export function setEncounters(encounters) {
+  state.encounters = encounters;
+  state.encountersLoading = false;
+  state.encountersError = null;
+  notify();
+}
+
+export function setEncountersError(message) {
+  state.encountersError = message;
+  state.encountersLoading = false;
+  notify();
+}
+
+export function setFormError(message) {
+  state.formError = message;
+  notify();
+}
+
+export function startEncountersLoading() {
+  state.encountersLoading = true;
+  state.encountersError = null;
   notify();
 }

@@ -57,6 +57,39 @@ export async function getPatient(id) {
   return response.json();
 }
 
+export async function listEncounters(patientId) {
+  const response = await fetch(`/api/patients/${patientId}/encounters`);
+
+  if (response.status === 404) {
+    throw new Error("Paciente não encontrado.");
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      `Falha ao carregar os atendimentos (HTTP ${response.status})`
+    );
+  }
+
+  return response.json();
+}
+
+export async function createEncounter(patientId,encounter) {
+  const response = await fetch(`/api/patients/${patientId}/encounters`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "aplication/json",
+    },
+    body: JSON.stringify(encounter),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok){
+    throw new Error(data.error || "Não foi possível criar o atendimento.");
+  }
+
+  return data;
+}
 /* ============================================================
    TODO API-1 (Encontro 2, Prática 2)
    Implemente `createPatient(patient)`.
