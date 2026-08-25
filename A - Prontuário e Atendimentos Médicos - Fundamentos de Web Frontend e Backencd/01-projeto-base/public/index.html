@@ -32,65 +32,117 @@
          Nenhum evento é registrado aqui: isso é papel do app.js.
          O HTML descreve a ESTRUTURA, não o comportamento.
     ------------------------------------------------------- -->
-    <section class="toolbar" aria-label="Filtros da lista de pacientes">
-      <div class="toolbar__search">
-        <label class="form-label" for="search-input">Buscar paciente</label>
-        <input
-          id="search-input"
-          class="form-control form-control-lg"
-          type="search"
-          placeholder="Digite parte do nome…"
-          autocomplete="off" />
-      </div>
+    <section id="patients-screen">
 
-      <div class="toolbar__filter form-check form-switch">
-        <input class="form-check-input" type="checkbox" id="only-active-input" />
-        <label class="form-check-label" for="only-active-input">
-          Mostrar apenas pacientes ativos
-        </label>
-      </div>
+      <section class="toolbar" aria-label="Filtros da lista de pacientes">
+        <div class="toolbar__search">
+          <label class="form-label" for="search-input">Buscar paciente</label>
+          <input
+            id="search-input"
+            class="form-control form-control-lg"
+            type="search"
+            placeholder="Digite parte do nome…"
+            autocomplete="off" />
+        </div>
+
+        <div class="toolbar__filter form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="only-active-input" />
+          <label class="form-check-label" for="only-active-input">
+            Mostrar apenas pacientes ativos
+          </label>
+        </div>    
+      </section>
+
+      <p id="result-counter" class="result-counter" aria-live="polite"></p>
+
+       <!-- A lista é desenhada por render.js. Ela nasce vazia de propósito. -->
+      <ul id="patient-list" class="patient-list"></ul>
     </section>
 
-    <p id="result-counter" class="result-counter" aria-live="polite"></p>
+    <section id="patient-detail-screen" hidden>
 
-    <!-- A lista é desenhada por render.js. Ela nasce vazia de propósito. -->
-    <ul id="patient-list" class="patient-list"></ul>
+      <button
+        id="back-to-patients"
+        type="button"
+      >
+        Voltar para pacientes
+      </button>
 
-    <form id="encounter-form">
-        <div>
-          <label for="started-at">Data e hora</label>
-          <input
-            id="started-at"
-            name="startedAt"
-            type="datetime-local"
-            required
-          >
-        </div>
+      <section class="patient-detail">
 
-        <div>
-          <label for="chief-complaint">Queixa principal</label>
-          <input
-            id="chief-complaint"
-            name="chiefComplaint"
-            type="text"
-            required
-          >
-        </div>
+        <h2 id="patient-detail-name"></h2>
+        <p>
+          Data de nascimento:
+          <span id="patient-detail-birth-date"></span>
+        </p>
+        <p>
+          CNS:
+          <span id="patient-detail-national-id"></span>
+        </p>
 
-        <div>
-          <label for="notes">Observações</label>
-          <textarea 
-            id="notes"
-            name="notes"
-          ></textarea>
-        </div>
+      </section>
 
-        <button type="submit">
-          Registrar atendimento
-        </button>
+      <section class="encounters">
 
-        <p id="encounter-form-error"></p>
-    </form>
+        <h2>Atendimentos</h2>
+
+        <div id="encounter-list"></div>
+      </section>
+
+      <section class="new-encounter">
+
+        <h2>Novo atendimento</h2>
+
+        <form id="encounter-form">
+          <div>
+            <label for="started-at">
+              Data e hora
+            </label>
+
+            <input
+              id="started-at"
+              name="startedAt"
+              type="datetime-local"
+              required
+            />
+          </div>
+
+          <div>
+            <label for="chief-complaint">
+              Queixa principal
+            </label>
+
+            <input
+              id="chief-complaint"
+              name="chiefComplaint"
+              type="text"
+              required
+            />
+          </div>
+
+          <div>
+            <label for="notes">
+              Observações
+            </label>
+
+            <textarea
+              id="notes"
+              name="notes"
+            ></textarea>
+          </div>
+
+          <button type="submit">
+            Registrar atendimento
+          </button>
+          
+          <p
+            id="encounter-form-error"
+            aria-live="polite"
+          ></p>
+
+        </form>
+      </section>
+    </section>
 
   </main>
 
