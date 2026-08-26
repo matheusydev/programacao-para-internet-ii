@@ -44,10 +44,22 @@ app.get("/api/health", (_request, response) => {
 // ============================================================
 app.get("/api/patients", (_request, response) => {
   const pacientes = db
-    .prepare("SELECT * FROM patients ORDER BY name")
+    .prepare(`
+      SELECT
+        id,
+        name,
+        birth_date AS birthDate,
+        national_id AS nationalId,
+        active
+      FROM patients
+      ORDER BY name
+    `)
     .all();
 
-  response.status(200).json(pacientes);
+  response.status(200).json(pacientes.map((patient: any) => ({
+    ...patient,
+    active: Boolean(patient.active)
+  })));
 });
 
 // ============================================================
@@ -109,14 +121,25 @@ app.get("/api/patients/:id", (request, response) => {
   const { id } = request.params;
 
   const patient = db
-    .prepare("SELECT * FROM patients WHERE id = ?")
-    .get(id);
+    .prepare(`
+    SELECT
+      id,
+      name,
+      birth_date AS birthDate,
+      national_id AS nationalId,
+      active
+    FROM patients
+    WHERE id = ?
+    `)
+    .get(id) as any;
 
   if (!patient) {
     return response.status(404).json({ error: "Paciente não encontrado." });
   }
 
-  return response.status(200).json(patient);
+  return response.status(200).json({
+    ...patient,
+    active: Boolean(patient.active)});
 });
 
 app.get("/api/patients/:id/encounters", (request, response) => {

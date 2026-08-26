@@ -128,3 +128,109 @@ Content-Type: application/json
   "startedAt": "2026-08-18T10:00",
   "chiefComplaint": "Retorno"
 }
+
+### ==========================================================
+### NÍVEL 2 - TELA DE DETALHE E ATENDIMENTOS
+### ==========================================================
+
+### 18. Criar paciente com nationalId já existente -> esperado 409
+POST {{host}}/api/patients
+Content-Type: application/json
+
+{
+  "name": "Paciente Duplicado",
+  "birthDate": "1995-05-20",
+  "nationalId": "700012345678999"
+}
+
+### 19. Buscar o paciente criado no teste 5 -> esperado 200
+### Use o ID retornado pelo teste 5 se não for 1.
+GET {{host}}/api/patients/1
+
+### 20. Criar atendimento com notes vazio -> esperado 201 e notes null
+POST {{host}}/api/patients/1/encounters
+Content-Type: application/json
+
+{
+  "startedAt": "2026-08-19T14:00",
+  "chiefComplaint": "Consulta de retorno",
+  "notes": ""
+}
+
+### 21. Criar atendimento com notes somente espaços -> esperado 201 e notes null
+POST {{host}}/api/patients/1/encounters
+Content-Type: application/json
+
+{
+  "startedAt": "2026-08-20T08:30",
+  "chiefComplaint": "Acompanhamento",
+  "notes": "     "
+}
+
+### 22. Criar atendimento com startedAt contendo segundos -> esperado 400
+POST {{host}}/api/patients/1/encounters
+Content-Type: application/json
+
+{
+  "startedAt": "2026-08-20T08:30:00",
+  "chiefComplaint": "Teste segundos"
+}
+
+### 23. Criar atendimento sem startedAt -> esperado 400
+POST {{host}}/api/patients/1/encounters
+Content-Type: application/json
+
+{
+  "chiefComplaint": "Teste sem data"
+}
+
+### 24. Criar atendimento com chiefComplaint vazio -> esperado 400
+POST {{host}}/api/patients/1/encounters
+Content-Type: application/json
+
+{
+  "startedAt": "2026-08-21T10:00",
+  "chiefComplaint": ""
+}
+
+### 25. Listar novamente os atendimentos do paciente 1
+### Deve aparecer os atendimentos criados nos testes anteriores.
+GET {{host}}/api/patients/1/encounters
+
+### 26. Criar atendimento com notas preenchidas
+### esperado 201 e notes com o texto enviado
+POST {{host}}/api/patients/1/encounters
+Content-Type: application/json
+
+{
+  "startedAt": "2026-08-22T16:45",
+  "chiefComplaint": "Dor abdominal",
+  "notes": "Paciente relatou melhora após repouso."
+}
+
+### 27. Verificar se os atendimentos continuam associados ao paciente correto
+GET {{host}}/api/patients/2/encounters
+
+### 28. Tentar criar atendimento para paciente inexistente
+### mesmo com dados válidos -> esperado 404
+POST {{host}}/api/patients/8888/encounters
+Content-Type: application/json
+
+{
+  "startedAt": "2026-08-23T11:20",
+  "chiefComplaint": "Paciente inexistente",
+  "notes": "Teste de integridade."
+}
+
+### 29. Data válida no limite do formato -> esperado 201
+POST {{host}}/api/patients/1/encounters
+Content-Type: application/json
+
+{
+  "startedAt": "2026-01-01T00:00",
+  "chiefComplaint": "Teste de data limite"
+}
+
+### 30. Listar atendimentos após vários cadastros
+### esperado 200 + array com os atendimentos criados
+GET {{host}}/api/patients/1/encounters

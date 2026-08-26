@@ -95,8 +95,9 @@ export function getVisiblePatients() {
  */
 export function setPatients(patients) {
     state.patients = patients;
-    state.isLoading = false
-    notify()
+    state.isLoading = false;
+    state.errorMessage = null;
+    notify();
 }
 
 /**
@@ -147,5 +148,13 @@ export function setFormError(message) {
 export function startEncountersLoading() {
   state.encountersLoading = true;
   state.encountersError = null;
+  notify();
+}
+
+export function clearSelectedPatient() {
+  state.selectedPatient = null;
+  state.encounters = [];
+  state.encountersError = null;
+  state.formError = null;
   notify();
 }
