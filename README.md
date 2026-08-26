@@ -1,6 +1,6 @@
 # Mini-Prontuário — Prontuário e Atendimentos Médicos
 
-Projeto-fio da Semana 01 de **Programação para Internet II (TEC.1052)** — IFPI, Campus Teresina Central.
+Projeto-fio da Semana 01 de **Programação para Internet II (TEC.1052)** — IFPI, Campus Teresina Central, atingido até o nível 2.
 
 ## 1. Descrição do Projeto
 
