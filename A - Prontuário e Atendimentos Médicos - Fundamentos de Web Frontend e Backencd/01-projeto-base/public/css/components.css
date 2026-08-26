@@ -120,3 +120,73 @@
   font-size: 1rem;
   font-weight: 700;
 }
+
+/* ------------------------------------------------------------
+   BLOCO: encounter-item
+   ------------------------------------------------------------ */
+
+.encounter-item {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: var(--espaco-4);
+  margin-bottom: var(--espaco-3);
+
+  background-color: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-md);
+
+  overflow-wrap: break-word;
+}
+
+.encounter-item__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: var(--espaco-2);
+}
+
+.encounter-item__date {
+  font-size: 0.875rem;
+}
+
+.encounter-item__complaint {
+  margin: 0;
+
+  font-size: 1rem;
+  font-weight: 600;
+
+  overflow-wrap: break-word;
+}
+
+.encounter-item__notes {
+  margin: var(--espaco-2) 0 0;
+
+  color: var(--cor-texto-suave);
+
+  overflow-wrap: break-word;
+}
+
+/* Ajuste específico para telas pequenas, como 375px */
+@media (max-width: 375px) {
+  .encounter-item {
+    padding: var(--espaco-3);
+  }
+
+  .encounter-item__header {
+    align-items: flex-start;
+  }
+
+  .encounter-item__date {
+    font-size: 0.8125rem;
+  }
+
+  .encounter-item__complaint {
+    font-size: 0.9375rem;
+  }
+
+  .encounter-item__notes {
+    font-size: 0.875rem;
+  }
+}
