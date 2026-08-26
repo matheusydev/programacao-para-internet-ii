@@ -148,6 +148,7 @@ export function setFormError(message) {
 export function startEncountersLoading() {
   state.encountersLoading = true;
   state.encountersError = null;
+  state.encounters = [];
   notify();
 }
 

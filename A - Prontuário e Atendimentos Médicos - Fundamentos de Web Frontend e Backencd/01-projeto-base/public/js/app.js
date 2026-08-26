@@ -137,7 +137,7 @@ function renderApp(state) {
 }
 
 /*Clique em um paciente*/
-patientListElement.addEventListener("click",async (event) => {
+patientListElement.addEventListener("click", async (event) => {
   const card = event.target.closest("[data-patient-id]");
 
   if (!card) {
@@ -146,16 +146,22 @@ patientListElement.addEventListener("click",async (event) => {
 
   const patientId = Number(card.dataset.patientId);
 
-  startEncountersLoading();
-
   try {
     const patient = await getPatient(patientId);
-    const encounters = await listEncounters(patientId);
 
     setSelectedPatient(patient);
-    setEncounters(encounters);
+    startEncountersLoading();
+
+    try {
+      const encounters = await listEncounters(patientId);
+
+      setEncounters(encounters);
+    } catch (error) {
+      setEncountersError(error.message);
+    }
+
   } catch (error) {
-    setEncountersError(error.message);
+    setError(error.message);
   }
 });
 
