@@ -1,0 +1,3 @@
+Houve um problema com a versão do Node (v24.20 LTS) ao executar o comando npm run db:reset. Para solucionar o erro, foi necessário fazer um downgrade para a versão v22.23.2 LTS. 
+Além disso, foi possível aprender a utilizar RegEx para formatação de datas e melhorar a lógica na criação de requisições HTTP — principalmente nos métodos GET (com consultas ao banco de dados) e POST (com formatação de data via RegEx). 
+Também foram feitos testes padronizados para cada questão, além do trabalho em equipe e versionamento do código.
