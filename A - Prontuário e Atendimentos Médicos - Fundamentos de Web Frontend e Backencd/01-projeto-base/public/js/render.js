@@ -188,6 +188,14 @@ export function renderPatientDetail(patient,elements)
 
 export function renderEncounterError(message, container) {
   container.innerHTML = `
-    <p>${escapeHtml(message)}</p>
+    <div class="empty-state">
+      <p class="empty-state__title">
+        Não foi possível carregar os atendimentos
+      </p>
+
+      <p class="m-0">
+        ${escapeHtml(message)}
+      </p>
+    </div>
   `;
 }
