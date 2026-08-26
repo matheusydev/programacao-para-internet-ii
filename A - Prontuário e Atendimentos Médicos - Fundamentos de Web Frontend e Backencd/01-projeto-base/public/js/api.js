@@ -20,7 +20,7 @@
  * ENCONTRO 2: trocaremos por "/api/patients" — e nada mais no
  * frontend vai precisar mudar. Guarde essa promessa.
  */
-const PATIENTS_URL = "./mock/patients.json";
+const PATIENTS_URL = "/api/patients";
 
 /**
  * Busca a lista de pacientes.
@@ -77,7 +77,7 @@ export async function createEncounter(patientId,encounter) {
   const response = await fetch(`/api/patients/${patientId}/encounters`, {
     method: "POST",
     headers: {
-      "Content-Type": "aplication/json",
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(encounter),
   });

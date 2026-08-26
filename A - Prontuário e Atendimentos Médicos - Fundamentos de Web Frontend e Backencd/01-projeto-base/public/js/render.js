@@ -50,7 +50,8 @@ function patientCardTemplate(patient) {
   const badgeLabel = patient.active ? "Ativo" : "Inativo";
 
   return `
-    <li class="patient-card${cardModifier}">
+    <li class="patient-card${cardModifier}"
+    data-patient-id="${patient.id}">
       <div class="d-flex justify-content-between align-items-start gap-2">
         <h2 class="patient-card__name">${escapeHtml(patient.name)}</h2>
         <span class="status-badge ${badgeModifier}">${badgeLabel}</span>
@@ -100,6 +101,10 @@ function emptyStateTemplate(searchTerm) {
  * entender o React muito melhor depois de ter vivido isso.
  */
 export function renderPatientList(patients, searchTerm, container) {
+  if (patients.length === 0) {
+    container.innerHTML = emptyStateTemplate(searchTerm);
+    return;
+  }
   const cards = patients.map(p => patientCardTemplate(p))
   container.innerHTML = cards.join("")
 }
@@ -157,5 +162,32 @@ function encounterItemTemplate(encounter) {
           : ""
       }
     </li>
+  `;
+}
+
+export function renderEncounterList(encounters, container) {
+  if (encounters.length === 0) {
+    container.innerHTML = `
+      <p>Nenhum atendimento registrado para este paciente.</p>
+    `;
+
+    return;
+  }
+
+  container.innerHTML = encounters
+    .map((encounter) => encounterItemTemplate(encounter))
+    .join("");
+}
+
+export function renderPatientDetail(patient,elements) 
+{
+  elements.name.textContent = patient.name;
+  elements.birthDate.textContent = formatDate(patient.birthDate);
+  elements.nationalId.textContent = patient.nationalId;
+}
+
+export function renderEncounterError(message, container) {
+  container.innerHTML = `
+    <p>${escapeHtml(message)}</p>
   `;
 }

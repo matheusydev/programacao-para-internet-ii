@@ -16,21 +16,110 @@
  * Nunca o contrário. A tela nunca é a fonte da verdade.
  * ============================================================
  */
-import { listPatients } from "./api.js";
-import { subscribe, getState, setPatients, setSearchTerm, setOnlyActive, setError } from "./state.js";
-import { renderPatientList, renderCounter, renderLoading, renderError } from "./render.js";
+import { createEncounter, getPatient, listEncounters, listPatients } from "./api.js";
+import { subscribe, getState, setPatients, setSearchTerm, setOnlyActive, setError, 
+         setSelectedPatient, setEncounters, setEncountersError, setFormError, startEncountersLoading, clearSelectedPatient } from "./state.js";
+import { renderPatientList, renderCounter, renderLoading, renderError, renderEncounterList, renderPatientDetail, renderEncounterError } from "./render.js";
 
 /* --- Os elementos que existem na página. Buscamos UMA vez. --- */
 const searchInput = document.querySelector("#search-input");
 const onlyActiveInput = document.querySelector("#only-active-input");
 const patientListElement = document.querySelector("#patient-list");
 const resultCounterElement = document.querySelector("#result-counter");
+const patientsScreen = document.querySelector('#patients-screen');
+const patientDetailScreen = document.querySelector('#patient-detail-screen');
+const backToPatientsButton = document.querySelector('#back-to-patients');
+const patientDetailName = document.querySelector('#patient-detail-name');
+const patientDetailBirthDate = document.querySelector('#patient-detail-birth-date');
+const patientDetailNationalId = document.querySelector('#patient-detail-national-id');
+const encounterListElement = document.querySelector('#encounter-list');
+const encounterForm = document.querySelector('#encounter-form');
+const encounterFormError = document.querySelector('#encounter-form-error');
 
+backToPatientsButton.addEventListener("click", () => {
+  clearSelectedPatient();
+})
+
+encounterForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const state = getState();
+
+  if (!state.selectedPatient) {
+    return;
+  }
+
+  const formData = new FormData(encounterForm);
+
+  const encounter = {
+    startedAt: formData.get("startedAt"),
+    chiefComplaint: formData.get("chiefComplaint"),
+    notes: formData.get("notes")
+  };
+
+  try {
+    const createdEncounter =
+      await createEncounter(
+        state.selectedPatient.id,
+        encounter
+      );
+    
+    setFormError(null);
+
+    setEncounters([
+      ...state.encounters,
+      createdEncounter
+    ]);
+
+    encounterForm.reset();
+
+  } catch (error) {
+    setFormError(error.message);
+  }
+});
 /**
  * A ÚNICA função que desenha a tela inteira.
  * Ela é chamada toda vez que o estado muda — e apenas por isso.
  */
 function renderApp(state) {
+  if (state.selectedPatient) {
+    patientsScreen.hidden = true;
+    patientDetailScreen.hidden = false;
+
+    renderPatientDetail(
+      state.selectedPatient,
+      {
+        name: patientDetailName,
+        birthDate: patientDetailBirthDate,
+        nationalId: patientDetailNationalId
+      }
+    );
+
+    if (state.encountersLoading) {
+      encounterListElement.innerHTML = "<p>Carregando atendimentos...</p>";
+    }
+    else if (state.encountersError) {
+      renderEncounterError(
+        state.encountersError,
+        encounterListElement
+      );
+    }
+    else {
+      renderEncounterList(
+        state.encounters,
+        encounterListElement
+      );
+    }
+
+    encounterFormError.textContent =
+      state.formError || "";
+    
+    return;
+  }
+
+  patientsScreen.hidden = false;
+  patientDetailScreen.hidden = true;
+
   if (state.errorMessage) {
     renderError(state.errorMessage, patientListElement);
     resultCounterElement.textContent = "";
@@ -46,6 +135,29 @@ function renderApp(state) {
   renderPatientList(state.visiblePatients, state.searchTerm, patientListElement);
   renderCounter(state.visiblePatients.length, state.patients.length, resultCounterElement);
 }
+
+/*Clique em um paciente*/
+patientListElement.addEventListener("click",async (event) => {
+  const card = event.target.closest("[data-patient-id]");
+
+  if (!card) {
+    return;
+  }
+
+  const patientId = Number(card.dataset.patientId);
+
+  startEncountersLoading();
+
+  try {
+    const patient = await getPatient(patientId);
+    const encounters = await listEncounters(patientId);
+
+    setSelectedPatient(patient);
+    setEncounters(encounters);
+  } catch (error) {
+    setEncountersError(error.message);
+  }
+});
 
 /* --- Eventos do usuário viram AÇÕES, nunca alterações de DOM --- */
 searchInput.addEventListener("input", (event) => {
