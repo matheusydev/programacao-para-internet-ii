@@ -47,6 +47,17 @@ function emptyStateTemplate() {
 //   vazio -> emptyStateTemplate(); senão -> map + join('') com medicationCardTemplate
 // ============================================================
 
+export function renderMedicationList(medications, container) {
+  if (medications.length === 0) {
+    container.innerHTML = emptyStateTemplate();
+
+    return;
+  }
+
+  container.innerHTML = medications
+  .map((medication) => medicationCardTemplate(medication))
+  .join("");
+}
 
 export function renderCounter(count, container) {
   container.textContent = `${count} prescrição(ões) no painel`;
@@ -67,3 +78,38 @@ export function renderError(message, container) {
 //   observações (se houver) e um botão <button id="remove-button">Suspender</button>
 //   dica: veja o padrão renderDetail do Mini-Prontuário (gabarito da Atividade 01)
 // ============================================================
+export function renderDetail(state, container) {
+    const medication = state.selectedMedication;
+
+    if (!medication) {
+        container.hidden = true;
+        container.innerHTML = "";
+        return;
+    }
+
+    container.hidden = false;
+
+    container.innerHTML = `
+        <div class="detail-panel__content">
+            <h2>${escapeHtml(medication.medicationName)}</h2>
+
+            <p><strong>Paciente:</strong> ${escapeHtml(medication.patientName)}</p>
+
+            <p><strong>Dosagem:</strong> ${escapeHtml(medication.dosage)}</p>
+
+            <p><strong>Via:</strong> ${escapeHtml(medication.route)}</p>
+
+            <p><strong>Horário previsto:</strong> ${formatDateTime(medication.scheduledAt)}</p>
+
+            ${
+                medication.notes
+                    ? `<p><strong>Observações:</strong> ${escapeHtml(medication.notes)}</p>`
+                    : ""
+            }
+
+            <button id="remove-button" class="btn btn-danger" type="button">
+                Suspender
+            </button>
+        </div>
+    `;
+}
