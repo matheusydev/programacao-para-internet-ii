@@ -25,6 +25,30 @@ app.get("/api/health", (_request, response) => {
 //   Nao esqueca de traduzir snake_case -> camelCase antes de responder.
 // ============================================================
 
+app.get("/api/medications", (_request, response) => {
+  const medicacoes = db
+    .prepare(`SELECT 
+      id,
+      patient_name,
+      medication_name,
+      dosage,
+      route,
+      scheduled_at,
+      notes
+    FROM medication_orders
+    ORDER BY patient_name`).all();
+
+  response.status(200).json(medicacoes.map((medicacao: any) => ({
+    id: medicacao.id, 
+    patientName: medicacao.patient_name, 
+    medicationName: medicacao.medication_name, 
+    dosage: medicacao.dosage, 
+    route: medicacao.route, 
+    scheduledAt: medicacao.scheduled_at, 
+    notes: medicacao.notes
+})))
+});
+
 // ============================================================
 // PASSO 3 — POST /api/medications
 //   valide patientName, medicationName, dosage, route, scheduledAt
