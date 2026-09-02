@@ -28,20 +28,27 @@ export async function listMedications() {
 //   method: "POST", headers Content-Type, body: JSON.stringify(medication)
 //   se !response.ok, leia o corpo e jogue o erro com a mensagem do servidor
 // ============================================================
-export async function createMedication(id,medication_orders) {
-    const response = await fetch(`/api/medications/${id}/medication_orders`, {
+export async function createMedication(medication) {
+    const response = await fetch(MEDICATIONS_URL, {
         method: "POST",
         headers: {
-            "Content-Type": "appication/json",
+            "Content-Type": "application/json",
         },
-        body: JSON.stringify(medication_orders),
+        body: JSON.stringify(medication),
     });
 
-    const data = await response.json()
-
-    if (!response.ok){
-        throw new Error(data.error || "Não foi possível criar a medicação.");
+    if (!response.ok) {
+        let errorMessage = "Não foi possível criar a medicação.";
+        try {
+            const data = await response.json();
+            errorMessage = data.error || errorMessage;
+        } catch {
+            errorMessage = `Erro no servidor (HTTP ${response.status})`;
+        }
+        throw new Error(errorMessage);
     }
+
+    return await response.json();
 }
 // ============================================================
 // PASSO 4 — implemente getMedication(id)
@@ -49,7 +56,7 @@ export async function createMedication(id,medication_orders) {
 //   response.status === 404 -> throw new Error("Prescrição não encontrada.")
 // ============================================================
 export async function getMedication(id){
-    const response = await fetch(`/api/medication/${id}`);
+    const response = await fetch(`${MEDICATIONS_URL}/${id}`);
 
     if (response.status === 404) {
         throw new Error("Prescrição não encontrada");
@@ -69,7 +76,7 @@ export async function getMedication(id){
 // ============================================================
 
 export async function removeMedication(id) {
-    const response = await fetch(`/api/medications/${id}`, {
+    const response = await fetch(`${MEDICATIONS_URL}/${id}`, {
         method: "DELETE",
     });
 
