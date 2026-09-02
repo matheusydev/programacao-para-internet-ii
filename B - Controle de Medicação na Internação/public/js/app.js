@@ -152,21 +152,15 @@ saveButton.addEventListener("click", async () => {
 // ============================================================
 
 medicationListElement.addEventListener("click", async (event) => {
-
     const card = event.target.closest("[data-medication-id]");
 
     if (!card) return;
-
     const id = Number(card.dataset.medicationId);
-
     selectMedication(id);
 
     try {
-
         await getMedication(id);
-
     } catch (error) {
-
         setDetailError(error.message);
     }
 });
