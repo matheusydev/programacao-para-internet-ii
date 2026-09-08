@@ -36,7 +36,7 @@ export const patientsController = {
   },
 
   getById(req: Request, res: Response) {
-    const patient = patientsService.getById(req.params.id);
+    const patient = patientsService.getById(req.params.id as string);
     
     if (!patient) {
       res.status(404).json({ error: "Paciente nao encontrado." });
