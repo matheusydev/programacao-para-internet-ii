@@ -83,7 +83,7 @@ export const encountersService = {
         patientId,
         data.startedAt,
         data.chiefComplaint.trim(),
-        isBlank(data.notes) ? null : data.notes.trim()
+        data.notes ? data.notes.trim() : null
       );
 
     const created = db

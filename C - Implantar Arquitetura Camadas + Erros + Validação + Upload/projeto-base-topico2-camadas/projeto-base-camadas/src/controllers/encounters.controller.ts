@@ -24,7 +24,7 @@ import { encountersService } from "../services/encounters.service.ts";
 export const encountersController = {
   list(req: Request, res: Response) {
     try {
-      const encounters = encountersService.list(req.params.id);
+      const encounters = encountersService.list(req.params.id as string);
       res.status(200).json(encounters);
     } catch (error) {
       if (error instanceof Error) {
@@ -43,7 +43,7 @@ export const encountersController = {
     try {
       const { startedAt, chiefComplaint, notes } = req.body ?? {};
       
-      const created = encountersService.create(req.params.id, { 
+      const created = encountersService.create(req.params.id as string, { 
         startedAt, 
         chiefComplaint, 
         notes 
