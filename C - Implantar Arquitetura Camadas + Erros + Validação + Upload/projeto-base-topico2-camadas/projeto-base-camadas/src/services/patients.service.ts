@@ -78,6 +78,10 @@ export const patientsService = {
     return toPatientJson(row);
   },
 
+  exists(id: string): boolean {
+    return db.prepare("SELECT 1 FROM patients WHERE id = ?").get(id) !== undefined;
+  },
+
   create(data: { name: string; birthDate: string; nationalId: string }) {
     if (
       isBlank(data.name) ||
