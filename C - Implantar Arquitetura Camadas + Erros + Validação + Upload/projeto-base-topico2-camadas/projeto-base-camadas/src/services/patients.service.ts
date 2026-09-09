@@ -29,7 +29,9 @@
  *   };
  * ============================================================
  */
+import { id } from "zod/v4/locales";
 import { db } from "../db/database.ts";
+import { BadRequestError, ConflictError, NotFoundError, UnprocessableEntityError } from "../errors/HttpError.ts";
 
 type PatientRow = {
   id: number;
@@ -72,7 +74,7 @@ export const patientsService = {
       .get(id) as PatientRow | undefined;
     
     if (!row) {
-      return null;
+      throw new NotFoundError(`O paciente ${id} não foi encontrado`, {patientId: id});
     }
     
     return toPatientJson(row);
@@ -86,10 +88,15 @@ export const patientsService = {
     if (
       isBlank(data.name) ||
       isBlank(data.birthDate) ||
-      !ISO_DATE.test(data.birthDate) ||
       isBlank(data.nationalId)
     ) {
-      throw new Error("VALIDATION_FAILED");
+      throw new BadRequestError("name, birthDate e nationalId são obrigatórios");
+    }
+    if (
+      !ISO_DATE.test(data.birthDate)
+    ) {
+      throw new UnprocessableEntityError("birthDate deve estar no formato ISO (AAAA-MM-DDTHH:MM)",
+      { startedAt: data.birthDate })
     }
 
     const duplicate = db
@@ -97,7 +104,7 @@ export const patientsService = {
       .get(data.nationalId.trim());
     
     if (duplicate) {
-      throw new Error("DUPLICATE_CNS");
+      throw new ConflictError(`cns ${data.nationalId} já cadastrado`, {nationalId: data.nationalId});
     }
 
     const result = db

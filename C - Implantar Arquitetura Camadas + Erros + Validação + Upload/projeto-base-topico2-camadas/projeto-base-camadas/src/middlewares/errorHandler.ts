@@ -12,3 +12,27 @@
  * todas as rotas (veja o TODO 9 la no final de server.ts).
  * ============================================================
  */
+
+import { Request, Response, NextFunction } from "express";
+import { HttpError } from "../errors/HttpError";
+
+export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {
+    if (err instanceof HttpError) {
+        return res.status(err.statusCode).json({
+            error: {
+                message: err.message,
+                statusCode: err.statusCode,
+                details: err.details ?? null,
+            },
+        });
+    }
+    console.error(err);
+
+    return res.status(500).json({
+        error: {
+            message: "internal server error",
+            statusCode: 500,
+            details: null,
+        },
+    });
+}

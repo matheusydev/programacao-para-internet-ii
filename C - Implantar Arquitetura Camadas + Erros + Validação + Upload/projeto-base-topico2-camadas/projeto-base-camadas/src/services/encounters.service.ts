@@ -14,6 +14,7 @@
  */
 
 import { db } from "../db/database.ts";
+import { BadRequestError, NotFoundError, UnprocessableEntityError } from "../errors/HttpError.ts";
 import { patientsService } from "./patients.service.ts";
 
 type EncounterRow = {
@@ -43,7 +44,7 @@ function isBlank(value: unknown): boolean {
 export const encountersService = {
   list(patientId: string) {
     if (!patientsService.exists(patientId)) {
-      throw new Error("PATIENT_NOT_FOUND");
+      throw new NotFoundError(`paciente ${patientId} não encontrado`, { patientId });
     }
 
     const rows = db
@@ -63,15 +64,20 @@ export const encountersService = {
     data: { startedAt: string; chiefComplaint: string; notes?: string }
   ) {
     if (!patientsService.exists(patientId)) {
-      throw new Error("PATIENT_NOT_FOUND");
+      throw new NotFoundError(`paciente ${patientId} não encontrado`, {patientId});
     }
 
     if (
       isBlank(data.chiefComplaint) ||
-      isBlank(data.startedAt) ||
-      !ISO_DATE_TIME.test(data.startedAt)
+      isBlank(data.startedAt)
     ) {
-      throw new Error("VALIDATION_FAILED");
+      throw new BadRequestError("chiefComplaint e startedAt são obrigatórios");
+    }
+    if (
+      !ISO_DATE_TIME.test(data.startedAt)
+     ) {
+      throw new UnprocessableEntityError("startedAt deve estar no formato ISO (AAAA-MM-DDTHH:MM)",
+      { startedAt: data.startedAt });
     }
 
     const result = db

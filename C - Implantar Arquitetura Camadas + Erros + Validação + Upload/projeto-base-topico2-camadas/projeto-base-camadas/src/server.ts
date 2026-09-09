@@ -24,6 +24,7 @@
 import express from "express";
 import { patientsRouter } from "./routes/patients.routes.ts";
 import { encountersRouter } from "./routes/encounters.routes.ts";
+import { errorHandler } from "./middlewares/errorHandler.ts";
 
 const app = express();
 const PORT = 3000;
@@ -52,3 +53,5 @@ app.listen(PORT, () => {
      import { errorHandler } from "./middlewares/errorHandler.ts";
      app.use(errorHandler);
    ============================================================ */
+
+app.use(errorHandler);
