@@ -8,6 +8,7 @@ import { state } from "./state.js";
 export function render() {
   renderFormError();
   renderPatientList();
+  renderPhotoPreview();
 }
 
 function renderFormError() {
@@ -52,3 +53,14 @@ function renderPatientList() {
  * qualquer requisicao ao servidor.
  * ============================================================
  */
+
+function renderPhotoPreview() {
+  const element = document.getElementById("photo-preview");
+  if (!state.previewUrl) {
+    element.classList.add("d-none");
+  } 
+  else{
+    element.classList.remove("d-none");
+    element.src = state.previewUrl;
+  }
+}

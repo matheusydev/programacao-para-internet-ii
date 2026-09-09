@@ -3,8 +3,9 @@
  * estado + api. Nenhuma logica de negocio mora aqui.
  */
 import { listPatients, createPatient } from "./api.js";
-import { state, setPatients, addPatient, setFormError, clearFormError } from "./state.js";
+import { state, setPatients, addPatient, setFormError, clearFormError, setPreviewUrl } from "./state.js";
 import { render } from "./render.js";
+import { renderApiError } from "./errors.js";
 
 async function init() {
   try {
@@ -34,8 +35,18 @@ document.getElementById("patient-form").addEventListener("submit", async (event)
   } catch (err) {
     // TODO 14 (Encontro 2): trocar por renderApiError(err.apiError)
     // quando o contrato de erro { error: { message, ... } } estiver pronto.
-    setFormError(err.apiError?.error ?? "Falha ao cadastrar paciente.");
+    renderApiError(err.apiError ?? { error: { message: "Falha ao cadastrar paciente." } });
   }
+  render();
+});
+
+document.querySelector('#patient-form input[name="photo"]').addEventListener("change", (event) => {
+  const photo = event.target.files[0];
+  if (!photo) return;
+  
+  const url = URL.createObjectURL(photo);
+  setPreviewUrl(url);
+
   render();
 });
 

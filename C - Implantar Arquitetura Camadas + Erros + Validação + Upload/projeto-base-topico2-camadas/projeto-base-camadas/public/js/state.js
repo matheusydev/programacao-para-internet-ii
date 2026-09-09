@@ -7,6 +7,7 @@ export const state = {
   patients: [],
   formError: null,
   fieldErrors: {},
+  previewUrl: null,
 };
 
 export function setPatients(patients) {
@@ -20,6 +21,10 @@ export function addPatient(patient) {
 export function setFormError(message, fieldErrors = {}) {
   state.formError = message;
   state.fieldErrors = fieldErrors;
+}
+
+export function setPreviewUrl(url) {
+  state.previewUrl = url;
 }
 
 export function clearFormError() {

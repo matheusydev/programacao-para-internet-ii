@@ -18,3 +18,12 @@
  * criacao de paciente que ja existe hoje.
  * ============================================================
  */
+
+import { setFormError } from "./state.js";
+import { render } from "./render.js";
+
+export function renderApiError(body) {
+    const {message, details} = body.error;
+    setFormError(message, details ?? {});
+    render();
+}
