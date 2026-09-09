@@ -74,12 +74,12 @@ Content-Type: application/json
 }
 
 ### 12. TODO 12/13: upload de foto (precisa de um arquivo .jpg local)
-# POST {{host}}/api/patients/1/photo
-# Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
-#
+POST {{host}}/api/patients/1/photo
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
 # ------WebKitFormBoundary
-# Content-Disposition: form-data; name="photo"; filename="foto.jpg"
-# Content-Type: image/jpeg
-#
-# < ./caminho/para/foto.jpg
+Content-Disposition: form-data; name="photo"; filename="foto.jpg"
+Content-Type: image/jpeg
+
+< ./caminho/para/foto.jpg
 # ------WebKitFormBoundary--

@@ -29,7 +29,6 @@
  *   };
  * ============================================================
  */
-import { id } from "zod/v4/locales";
 import { db } from "../db/database.ts";
 import { BadRequestError, ConflictError, NotFoundError, UnprocessableEntityError } from "../errors/HttpError.ts";
 
@@ -120,6 +119,28 @@ export const patientsService = {
 
     return toPatientJson(created);
   },
+
+  setPhoto(id: string, filename: string) {
+    const row = db
+      .prepare("SELECT id, name, birth_date, national_id, active, photo_path FROM patients WHERE id = ?")
+      .get(id) as PatientRow | undefined;
+
+    if (!row) {
+      throw new NotFoundError(`O paciente ${id} não foi encontrado`, { patientId: id });
+    }
+
+    const photoPath = `/uploads/${filename}`;
+
+
+    db.prepare("UPDATE patients SET photo_path = ? WHERE id = ?")
+      .run(photoPath, id);
+
+    const updated = db
+      .prepare("SELECT id, name, birth_date, national_id, active, photo_path FROM patients WHERE id = ?")
+      .get(id) as PatientRow;
+
+    return toPatientJson(updated);
+  },
 };
 
 export {ISO_DATE};
@@ -135,3 +156,4 @@ export {ISO_DATE};
  *   - devolve o paciente atualizado (toPatientJson)
  * ============================================================
  */
+
