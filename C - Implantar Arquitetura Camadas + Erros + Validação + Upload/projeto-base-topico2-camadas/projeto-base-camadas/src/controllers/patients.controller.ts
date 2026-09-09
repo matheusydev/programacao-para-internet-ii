@@ -28,6 +28,7 @@
  */
 import { Request, Response } from "express";
 import { patientsService } from "../services/patients.service.ts";
+import { UnprocessableEntityError } from "../errors/HttpError.ts";
 
 export const patientsController = {
   list(_req: Request, res: Response) {
@@ -50,7 +51,16 @@ export const patientsController = {
     const { name, birthDate, nationalId } = req.body;
     const created = patientsService.create({ name, birthDate, nationalId });
     res.status(201).json(created);
-  }
+  },
+
+  uploadPhoto(req: Request, res: Response) {
+      if (!req.file) {
+        throw new UnprocessableEntityError("Nenhum arquivo enviado.");
+      }
+
+      const updatedPatient = patientsService.setPhoto(req.params.id as string, req.file.filename);
+      res.status(200).json(updatedPatient);
+    }
 };
 /**
  * ============================================================
@@ -62,3 +72,5 @@ export const patientsController = {
  *   - responde 200 com o paciente atualizado
  * ============================================================
  */
+
+
