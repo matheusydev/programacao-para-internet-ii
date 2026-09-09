@@ -64,14 +64,14 @@ GET {{host}}/api/patients/9999/encounters
 ### ============================================================
 
 ### 11. TODO 10/11: payload invalido -> esperado 400 com "details"
-# POST {{host}}/api/patients
-# Content-Type: application/json
-#
-# {
-#   "name": "",
-#   "birthDate": "data-invalida",
-#   "nationalId": "123"
-# }
+POST {{host}}/api/patients
+Content-Type: application/json
+
+{
+  "name": "",
+  "birthDate": "data-invalida",
+  "nationalId": "123"
+}
 
 ### 12. TODO 12/13: upload de foto (precisa de um arquivo .jpg local)
 # POST {{host}}/api/patients/1/photo

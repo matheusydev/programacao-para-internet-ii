@@ -122,6 +122,8 @@ export const patientsService = {
   },
 };
 
+export {ISO_DATE};
+
 /**
  * ============================================================
  * TODO 13 (Encontro 2, continuacao) -- Service de upload

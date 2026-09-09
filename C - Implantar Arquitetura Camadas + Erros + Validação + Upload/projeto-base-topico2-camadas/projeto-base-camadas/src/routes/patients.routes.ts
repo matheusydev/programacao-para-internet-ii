@@ -27,12 +27,14 @@
  */
 import { Router } from "express";
 import { patientsController } from "../controllers/patients.controller.ts";
+import { validate } from "../middlewares/validate.ts";
+import { createPatientSchema } from "../validation/patients.schemas.ts";
 
 export const patientsRouter = Router();
 
 patientsRouter.get("/", patientsController.list);
 patientsRouter.get("/:id", patientsController.getById);
-patientsRouter.post("/", patientsController.create);
+patientsRouter.post("/", validate(createPatientSchema), patientsController.create);
 
 /**
  * ============================================================

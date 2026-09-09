@@ -12,3 +12,13 @@
  *   patientsRouter.post("/", validate(createPatientSchema), patientsController.create);
  * ============================================================
  */
+
+import { z } from "zod";
+
+import { ISO_DATE } from "../services/patients.service"
+
+export const createPatientSchema = z.object({
+    name: z.string().min(1),
+    birthDate: z.string().regex(ISO_DATE),
+    nationalId: z.string().min(1),
+})
