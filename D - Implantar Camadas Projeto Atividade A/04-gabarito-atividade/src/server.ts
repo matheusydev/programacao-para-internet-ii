@@ -7,7 +7,7 @@
  * A separacao em camadas chega na Semana 03.
  */
 import express from "express";
-import { db } from "./database";
+import { db } from "./db/database";
 
 const app = express();
 const PORT = 3000;
