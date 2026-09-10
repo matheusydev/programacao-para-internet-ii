@@ -121,7 +121,7 @@ export const patientsService = {
   },
 
   setPhoto(id: string, filename: string) {
-    this.getById(id); // reaproveita a checagem + o NotFoundError
+    this.getById(id); 
 
     const photoPath = `/uploads/${filename}`;
     db.prepare("UPDATE patients SET photo_path = ? WHERE id = ?").run(photoPath, id);
