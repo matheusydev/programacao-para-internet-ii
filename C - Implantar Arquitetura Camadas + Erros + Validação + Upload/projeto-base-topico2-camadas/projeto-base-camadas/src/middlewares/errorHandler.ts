@@ -15,6 +15,7 @@
 
 import { Request, Response, NextFunction } from "express";
 import { HttpError } from "../errors/HttpError";
+import { MulterError } from "multer";
 
 export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {
     if (err instanceof HttpError) {
@@ -23,6 +24,16 @@ export function errorHandler(err: unknown, req: Request, res: Response, next: Ne
                 message: err.message,
                 statusCode: err.statusCode,
                 details: err.details ?? null,
+            },
+        });
+    }
+
+    if (err instanceof MulterError && err.code === "LIMIT_FILE_SIZE") {
+        return res.status(413).json({
+            error: {
+                message: err.message,
+                statusCode: 413,
+                details: { field: err.field, limitBytes: 2 * 1024 * 1024 },
             },
         });
     }

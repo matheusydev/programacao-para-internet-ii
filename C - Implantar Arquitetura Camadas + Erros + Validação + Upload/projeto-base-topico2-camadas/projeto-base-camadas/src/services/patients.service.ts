@@ -121,19 +121,10 @@ export const patientsService = {
   },
 
   setPhoto(id: string, filename: string) {
-    const row = db
-      .prepare("SELECT id, name, birth_date, national_id, active, photo_path FROM patients WHERE id = ?")
-      .get(id) as PatientRow | undefined;
-
-    if (!row) {
-      throw new NotFoundError(`O paciente ${id} não foi encontrado`, { patientId: id });
-    }
+    this.getById(id); // reaproveita a checagem + o NotFoundError
 
     const photoPath = `/uploads/${filename}`;
-
-
-    db.prepare("UPDATE patients SET photo_path = ? WHERE id = ?")
-      .run(photoPath, id);
+    db.prepare("UPDATE patients SET photo_path = ? WHERE id = ?").run(photoPath, id);
 
     const updated = db
       .prepare("SELECT id, name, birth_date, national_id, active, photo_path FROM patients WHERE id = ?")

@@ -83,3 +83,32 @@ Content-Type: image/jpeg
 
 < ./uploads/foto.jpg
 ------WebKitFormBoundary--
+
+### 13. FALHA PROPOSITAL: paciente inexistente no upload -> esperado 404
+POST {{host}}/api/patients/9999/photo
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="photo"; filename="foto.jpg"
+Content-Type: image/jpeg
+
+< ./uploads/foto.jpg
+------WebKitFormBoundary--
+
+### 14. FALHA PROPOSITAL: sem arquivo enviado -> esperado 422
+POST {{host}}/api/patients/1/photo
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary--
+
+### 15. FALHA PROPOSITAL: arquivo maior que 2MB -> esperado 413
+### Precisa de um arquivo grande em ./uploads/foto-grande.png (>2MB)
+POST {{host}}/api/patients/1/photo
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="photo"; filename="foto-grande.png"
+Content-Type: image/jpeg
+
+< ./uploads/foto-grande.png
+------WebKitFormBoundary--
