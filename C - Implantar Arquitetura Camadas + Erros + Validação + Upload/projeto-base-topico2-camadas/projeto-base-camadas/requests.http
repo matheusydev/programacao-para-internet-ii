@@ -77,9 +77,9 @@ Content-Type: application/json
 POST {{host}}/api/patients/1/photo
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
 
-# ------WebKitFormBoundary
+------WebKitFormBoundary
 Content-Disposition: form-data; name="photo"; filename="foto.jpg"
 Content-Type: image/jpeg
 
-< ./caminho/para/foto.jpg
-# ------WebKitFormBoundary--
+< ./uploads/foto.jpg
+------WebKitFormBoundary--
