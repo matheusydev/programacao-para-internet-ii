@@ -109,3 +109,29 @@ Content-Type: application/json
   "birthDate": "1980-01-01",
   "nationalId": "700012345678901"
 }
+
+### ==========================================================
+### TESTES ADICIONAIS: 422 e 413
+### ==========================================================
+
+### 16. FALHA PROPOSITAL: regra de negocio (semantica) -> esperado 422
+### (UnprocessableEntityError) - Exemplo: tentar criar atendimento para paciente inativo
+POST {{host}}/api/patients/4/encounters
+Content-Type: application/json
+
+{
+  "startedAt": "2026-09-11T19:30",
+  "chiefComplaint": "Paciente esta inativo no sistema",
+  "notes": "O formato esta correto (nao e 400), mas a regra de negocio impede (422)."
+}
+
+### 17. FALHA PROPOSITAL: texto gigante -> esperado 413
+### (PayloadTooLargeError) - Exemplo: string de notas excedendo o limite permitido
+POST {{host}}/api/patients/1/encounters
+Content-Type: application/json
+
+{
+  "startedAt": "2026-09-11T19:30",
+  "chiefComplaint": "Cefaleia",
+  "notes": "Esta string simula um texto gigantesco que excede o limite que a sua API aceita processar. Em um cenario real, voce geraria o erro 413 ao ler um body muito pesado ou ao validar o tamanho maximo de caracteres permitido para o campo notes no banco de dados."
+}
