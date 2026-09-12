@@ -1,5 +1,6 @@
 import { db } from "../db/database";
-import { patientsService } from "../services/patients.service.js";
+import { patientsService } from "./patients.service";
+import { NotFoundError, BadRequestError } from "../errors/HttpError";
 
 type EncounterRow = {
   id: number;
@@ -28,9 +29,8 @@ function isBlank(value: unknown): boolean {
 export const encountersService = {
   list(patientId: string) {
     if (!patientsService.exists(patientId)) {
-      throw new Error("PATIENT_NOT_FOUND");
+      throw new NotFoundError("Paciente nao encontrado.");
     }
-
     const rows = db
       .prepare(
         `SELECT id, patient_id, started_at, chief_complaint, notes
@@ -39,7 +39,6 @@ export const encountersService = {
          ORDER BY started_at DESC`
       )
       .all(patientId) as EncounterRow[];
-
     return rows.map(toEncounterJson);
   },
 
@@ -48,17 +47,15 @@ export const encountersService = {
     data: { startedAt: string; chiefComplaint: string; notes?: string }
   ) {
     if (!patientsService.exists(patientId)) {
-      throw new Error("PATIENT_NOT_FOUND");
+      throw new NotFoundError("Paciente nao encontrado.");
     }
-
     if (
       isBlank(data.chiefComplaint) ||
       isBlank(data.startedAt) ||
       !ISO_DATE_TIME.test(data.startedAt)
     ) {
-      throw new Error("VALIDATION_FAILED");
+      throw new BadRequestError("Erro de validacao nos campos.");
     }
-
     const result = db
       .prepare(
         `INSERT INTO encounters (patient_id, started_at, chief_complaint, notes)
@@ -70,14 +67,12 @@ export const encountersService = {
         data.chiefComplaint.trim(),
         data.notes ? data.notes.trim() : null
       );
-
     const created = db
       .prepare(
         `SELECT id, patient_id, started_at, chief_complaint, notes
          FROM encounters WHERE id = ?`
       )
       .get(result.lastInsertRowid) as EncounterRow;
-
     return toEncounterJson(created);
   },
 };
