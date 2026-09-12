@@ -19,12 +19,6 @@ function toPatientJson(row: PatientRow) {
   };
 }
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-
-function isBlank(value: unknown): boolean {
-  return typeof value !== "string" || value.trim() === "";
-}
-
 export const patientsService = {
   list() {
     const rows = db
@@ -49,14 +43,6 @@ export const patientsService = {
   },
 
   create(data: { name: string; birthDate: string; nationalId: string }) {
-    if (
-      isBlank(data.name) ||
-      isBlank(data.birthDate) ||
-      !ISO_DATE.test(data.birthDate) ||
-      isBlank(data.nationalId)
-    ) {
-      throw new BadRequestError("Erro de validacao nos campos.");
-    }
 
     const duplicate = db
       .prepare("SELECT id FROM patients WHERE national_id = ?")
