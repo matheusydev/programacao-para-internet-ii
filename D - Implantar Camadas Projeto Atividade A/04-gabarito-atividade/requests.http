@@ -114,7 +114,7 @@ Content-Type: application/json
 ### TESTES ADICIONAIS: 422 e 413
 ### ==========================================================
 
-### 16. FALHA PROPOSITAL: regra de negocio (semantica) -> esperado 422
+### 15. FALHA PROPOSITAL: regra de negocio (semantica) -> esperado 422
 ### (UnprocessableEntityError) - Exemplo: tentar criar atendimento para paciente inativo
 POST {{host}}/api/patients/4/encounters
 Content-Type: application/json
@@ -125,7 +125,7 @@ Content-Type: application/json
   "notes": "O formato esta correto (nao e 400), mas a regra de negocio impede (422)."
 }
 
-### 17. FALHA PROPOSITAL: texto gigante -> esperado 413
+### 16. FALHA PROPOSITAL: texto gigante -> esperado 413
 ### (PayloadTooLargeError) - Exemplo: string de notas excedendo o limite permitido
 POST {{host}}/api/patients/1/encounters
 Content-Type: application/json
@@ -135,3 +135,43 @@ Content-Type: application/json
   "chiefComplaint": "Cefaleia",
   "notes": "Esta string simula um texto gigantesco que excede o limite que a sua API aceita processar. Em um cenario real, voce geraria o erro 413 ao ler um body muito pesado ou ao validar o tamanho maximo de caracteres permitido para o campo notes no banco de dados."
 }
+
+### 17. UPLOAD DE FOTO: (precisa de um arquivo .jpg local)
+POST {{host}}/api/patients/1/photo
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="photo"; filename="foto.jpg"
+Content-Type: image/jpeg
+
+< ./uploads/foto.jpg
+------WebKitFormBoundary--
+
+### 18. FALHA PROPOSITAL: paciente inexistente no upload -> esperado 404
+POST {{host}}/api/patients/9999/photo
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="photo"; filename="foto.jpg"
+Content-Type: image/jpeg
+
+< ./uploads/foto.jpg
+------WebKitFormBoundary--
+
+### 19. FALHA PROPOSITAL: sem arquivo enviado -> esperado 422
+POST {{host}}/api/patients/1/photo
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary--
+
+### 20. FALHA PROPOSITAL: arquivo maior que 2MB -> esperado 413
+### Precisa de um arquivo grande em ./uploads/foto-grande.png (>2MB)
+POST {{host}}/api/patients/1/photo
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="photo"; filename="foto-grande.png"
+Content-Type: image/jpeg
+
+< ./uploads/foto-grande.png
+------WebKitFormBoundary--

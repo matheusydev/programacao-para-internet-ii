@@ -1,5 +1,7 @@
+import { id } from "zod/locales";
 import { db } from "../db/database";
-import { BadRequestError, ConflictError } from "../errors/HttpError";
+import { BadRequestError, ConflictError, NotFoundError } from "../errors/HttpError";
+import { string } from "zod";
 
 type PatientRow = {
   id: number;
@@ -64,5 +66,28 @@ export const patientsService = {
       .get(result.lastInsertRowid) as PatientRow;
 
     return toPatientJson(created);
+
+  },
+
+  setPhoto(id: string, filename: string) {
+    const row = db
+      .prepare("SELECT id, name, birth_date, national_id, active, photo_path FROM patients WHERE id = ?")
+      .get(id) as PatientRow | undefined;
+    
+    if (!row) {
+      throw new NotFoundError(`O paciente ${id} não foi encontrado`, { 
+      patientId: id});
+    }
+
+    const photoPath = `/uploads/${filename}`;
+
+    db.prepare("UPDATE patients SET photo_path = ? WHERE id = ?")
+      .run(photoPath, id);
+
+    const updated = db
+      .prepare("SELECT id, name, birth_date, national_id, active, photo_path FROM patients WHERE id = ?")
+      .get(id) as PatientRow;
+
+      return toPatientJson(updated);
   },
 };

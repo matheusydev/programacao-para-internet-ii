@@ -15,7 +15,8 @@ CREATE TABLE patients (
   name        TEXT    NOT NULL,
   birth_date  TEXT    NOT NULL,            -- ISO 8601: AAAA-MM-DD
   national_id TEXT    NOT NULL UNIQUE,     -- Cartao Nacional de Saude (CNS)
-  active      INTEGER NOT NULL DEFAULT 1   -- SQLite nao tem BOOLEAN: 0 ou 1
+  active      INTEGER NOT NULL DEFAULT 1,   -- SQLite nao tem BOOLEAN: 0 ou 1
+  photo_path  TEXT 
 );
 
 -- ------------------------------------------------------------
