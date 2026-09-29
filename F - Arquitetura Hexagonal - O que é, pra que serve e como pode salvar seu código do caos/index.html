@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arquitetura Hexagonal na Era dos Agentes — Portas, Adaptadores e Protocolos Que Não Se Pode Violar (Copy)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FBFAF6; --bg-alt:#F2EEE5; --bg-card:#FFFFFF;
+  --ink:#17191C; --ink-soft:#3F444B; --muted:#7A7368;
+  --accent:#C2410C; --accent-ink:#8A4520; --accent-soft:#FDF3EC; --accent-line:#F0D4C2;
+  --good:#2F6B4F; --good-soft:#EDF4EF; --good-line:#B8D4C4;
+  --bad:#A93226; --bad-soft:#FBEEEC; --bad-line:#E7B9B2;
+  --warn:#8C5D12; --warn-soft:#FDF6E7; --warn-line:#E7D2A0;
+  --border:#E3DCCC; --border-soft:#ECE6D8;
+  --code-bg:#15171C; --code-fg:#E8E3DA; --code-key:#F0A868; --code-str:#9FCBAE; --code-cmt:#8A8F99;
+  --shadow: 0 1px 2px rgba(23,25,28,.04), 0 8px 24px -12px rgba(23,25,28,.12);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171B; --bg-alt:#1B1E23; --bg-card:#1C1F24;
+    --ink:#F2EFE9; --ink-soft:#CFC9BC; --muted:#9C9C93;
+    --accent:#FF9257; --accent-ink:#FFD3AD; --accent-soft:#2B2019; --accent-line:#4A3324;
+    --good:#7FCBA2; --good-soft:#182420; --good-line:#2E4A3D;
+    --bad:#F0A29A; --bad-soft:#2A1917; --bad-line:#4A2A26;
+    --warn:#E5C27D; --warn-soft:#26200F; --warn-line:#4A3D1F;
+    --border:#33383F; --border-soft:#292E34;
+    --code-bg:#0B0C0E; --code-fg:#E8E3DA; --code-key:#F0A868; --code-str:#9FCBAE; --code-cmt:#8A8F99;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171B; --bg-alt:#1B1E23; --bg-card:#1C1F24;
+  --ink:#F2EFE9; --ink-soft:#CFC9BC; --muted:#9C9C93;
+  --accent:#FF9257; --accent-ink:#FFD3AD; --accent-soft:#2B2019; --accent-line:#4A3324;
+  --good:#7FCBA2; --good-soft:#182420; --good-line:#2E4A3D;
+  --bad:#F0A29A; --bad-soft:#2A1917; --bad-line:#4A2A26;
+  --warn:#E5C27D; --warn-soft:#26200F; --warn-line:#4A3D1F;
+  --border:#33383F; --border-soft:#292E34;
+  --code-bg:#0B0C0E; --code-fg:#E8E3DA; --code-key:#F0A868; --code-str:#9FCBAE; --code-cmt:#8A8F99;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Inter",ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:860px; margin:0 auto; padding:0 22px 90px;}
+.mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+
+/* ---------- HERO ---------- */
+.hero{
+  background:
+    radial-gradient(1100px 420px at 15% -10%, var(--accent-soft), transparent 60%),
+    var(--bg-alt);
+  border-bottom:1px solid var(--border);
+  padding:64px 22px 46px;
+}
+.hero-inner{max-width:860px; margin:0 auto;}
+.kicker{
+  font-size:11.5px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase;
+  color:var(--accent); margin-bottom:16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.kicker .dot{width:5px;height:5px;border-radius:50%;background:var(--muted);display:inline-block}
+h1.title{
+  font-size:clamp(28px,4.4vw,44px); line-height:1.12; font-weight:800; letter-spacing:-0.01em;
+  margin:0 0 16px;
+}
+h1.title em{
+  font-style:normal; color:var(--accent);
+}
+.deck{
+  font-size:clamp(16px,2vw,19px); color:var(--ink-soft); line-height:1.55; max-width:640px; margin:0 0 26px;
+}
+.credits{
+  display:flex; gap:18px; flex-wrap:wrap; font-size:13px; color:var(--muted); border-top:1px solid var(--border); padding-top:18px;
+}
+.credits b{color:var(--ink-soft); font-weight:600}
+.credits a{color:var(--accent); text-decoration:none; border-bottom:1px solid var(--accent-line)}
+.credits a:hover{border-bottom-color:var(--accent)}
+
+/* ---------- TOC ---------- */
+.toc{
+  margin:40px 0 8px; padding:18px 20px; background:var(--bg-card); border:1px solid var(--border);
+  border-radius:10px; box-shadow:var(--shadow); font-size:14px;
+}
+.toc-title{font-weight:700; font-size:11.5px; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); margin-bottom:10px}
+.toc ol{margin:0; padding-left:20px; columns:2; column-gap:28px;}
+.toc li{margin-bottom:6px; break-inside:avoid;}
+.toc a{color:var(--ink-soft); text-decoration:none; border-bottom:1px dotted transparent}
+.toc a:hover{color:var(--accent); border-bottom-color:var(--accent-line)}
+
+/* ---------- ARTICLE TYPE ---------- */
+article{margin-top:48px;}
+h2{
+  font-size:clamp(21px,2.6vw,27px); font-weight:800; letter-spacing:-.005em; margin:56px 0 18px;
+  padding-top:6px; scroll-margin-top:20px;
+}
+h3{font-size:18px; font-weight:700; margin:28px 0 10px;}
+p{font-size:16.5px; line-height:1.72; color:var(--ink-soft); margin:0 0 18px;}
+p.lead{font-size:19px; line-height:1.6; color:var(--ink); font-weight:500; margin-bottom:26px;}
+strong{color:var(--ink); font-weight:700;}
+em{color:var(--ink);}
+ul,ol{font-size:16.5px; line-height:1.72; color:var(--ink-soft); padding-left:22px; margin:0 0 18px;}
+li{margin-bottom:6px;}
+code{
+  font-family:"JetBrains Mono",monospace; font-size:0.86em; background:var(--bg-alt);
+  border:1px solid var(--border-soft); padding:0.5px 5px; border-radius:4px; color:var(--accent-ink);
+}
+a{color:var(--accent)}
+
+.pull{
+  font-family:"JetBrains Mono",monospace; font-size:clamp(17px,2.2vw,21px); font-weight:500; line-height:1.5;
+  color:var(--ink); border-left:3px solid var(--accent); padding:4px 0 4px 20px; margin:34px 0;
+}
+
+/* ---------- BOXES ---------- */
+.box{border-radius:10px; padding:16px 18px; margin:24px 0; border:1px solid; font-size:15px; line-height:1.62;}
+.box p{margin:0 0 6px; font-size:15px; color:inherit;}
+.box p:last-child{margin-bottom:0}
+.box .bt{display:block; font-weight:700; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;}
+.box.quote{background:var(--bg-alt); border-color:var(--border); color:var(--ink-soft);}
+.box.quote .bt{color:var(--muted)}
+.box.rule{background:var(--accent-soft); border-color:var(--accent-line); color:var(--ink);}
+.box.rule .bt{color:var(--accent)}
+.box.tip{background:var(--good-soft); border-color:var(--good-line); color:var(--ink);}
+.box.tip .bt{color:var(--good)}
+.box.warn{background:var(--warn-soft); border-color:var(--warn-line); color:var(--ink);}
+.box.warn .bt{color:var(--warn)}
+
+/* ---------- DD (comparação) ---------- */
+.dd{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0;}
+@media (max-width:600px){.dd{grid-template-columns:1fr}}
+.dd .no,.dd .yes{border-radius:10px; padding:14px 16px; border:1px solid; font-size:14.5px; line-height:1.55;}
+.dd .no{background:var(--bad-soft); border-color:var(--bad-line); color:var(--ink-soft);}
+.dd .yes{background:var(--good-soft); border-color:var(--good-line); color:var(--ink-soft);}
+.dd .lb{display:block; font-weight:700; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;}
+.dd .no .lb{color:var(--bad)}
+.dd .yes .lb{color:var(--good)}
+.dd p{margin:0; font-size:14.5px;}
+.dd code{background:rgba(0,0,0,.05)}
+
+/* ---------- TERM / CODE ---------- */
+.term{
+  border-radius:10px; overflow:hidden; margin:22px 0; border:1px solid var(--border);
+  box-shadow:var(--shadow); background:var(--code-bg);
+}
+.term-bar{
+  font-family:"JetBrains Mono",monospace; font-size:11.5px; font-weight:600; letter-spacing:.4px;
+  color:#B9BEC7; background:rgba(255,255,255,.05); padding:8px 14px; border-bottom:1px solid rgba(255,255,255,.08);
+}
+.term pre{
+  margin:0; padding:16px 18px; overflow-x:auto; font-family:"JetBrains Mono",monospace; font-size:13.2px;
+  line-height:1.62; color:var(--code-fg); -webkit-font-smoothing:antialiased;
+}
+.term pre .k{color:var(--code-key); font-weight:600}
+.term pre .s{color:var(--code-str)}
+.term pre .c{color:var(--code-cmt); font-style:italic}
+.term pre .w{color:var(--accent)}
+
+/* ---------- TABLE ---------- */
+.tbl-wrap{overflow-x:auto; margin:22px 0; border:1px solid var(--border); border-radius:10px;}
+table{width:100%; border-collapse:collapse; font-size:14.5px; background:var(--bg-card);}
+th{
+  text-align:left; font-size:11px; letter-spacing:.8px; text-transform:uppercase; color:var(--muted);
+  background:var(--bg-alt); padding:11px 14px; border-bottom:1px solid var(--border); font-weight:700;
+}
+td{padding:11px 14px; border-bottom:1px solid var(--border-soft); color:var(--ink-soft); vertical-align:top;}
+tr:last-child td{border-bottom:none}
+tr.hl td{background:var(--accent-soft)}
+td code, th code{white-space:nowrap}
+
+/* ---------- FIGURE ---------- */
+figure{margin:30px 0; text-align:left;}
+.fig-frame{
+  background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:18px 18px 8px;
+  box-shadow:var(--shadow);
+}
+.fig-frame svg{display:block; width:100%; height:auto;}
+figcaption{font-size:13px; color:var(--muted); margin-top:10px; line-height:1.55; padding:0 2px;}
+figcaption b{color:var(--ink-soft)}
+
+/* ---------- CHECKLIST ---------- */
+ul.checklist{list-style:none; padding-left:0; margin:20px 0;}
+ul.checklist li{
+  position:relative; padding-left:30px; margin-bottom:9px; font-size:15.5px; color:var(--ink-soft);
+}
+ul.checklist li::before{
+  content:"✓"; position:absolute; left:0; top:0; width:20px; height:20px; border-radius:5px;
+  background:var(--good-soft); color:var(--good); font-size:12px; font-weight:800; display:flex;
+  align-items:center; justify-content:center; border:1px solid var(--good-line);
+}
+
+/* ---------- ANALOGY CARD ---------- */
+.analogy{
+  display:grid; grid-template-columns:auto 1fr; gap:14px; align-items:flex-start;
+  background:var(--bg-alt); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:26px 0;
+}
+.analogy .ico{font-size:26px; line-height:1;}
+.analogy h4{margin:0 0 6px; font-size:15px; font-weight:800; color:var(--accent-ink);}
+.analogy p{margin:0; font-size:15px;}
+
+hr.sep{border:none; border-top:1px solid var(--border); margin:52px 0;}
+
+footer{
+  max-width:860px; margin:70px auto 0; padding:26px 22px 50px; border-top:1px solid var(--border);
+  color:var(--muted); font-size:13.5px; line-height:1.7;
+}
+footer a{color:var(--accent)}
+.byline-end{
+  display:flex; gap:10px; align-items:center; margin-top:18px; font-size:13px; color:var(--muted);
+}
+.badge{
+  display:inline-block; font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
+  background:var(--accent-soft); color:var(--accent-ink); border:1px solid var(--accent-line);
+  border-radius:999px; padding:3px 10px;
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="kicker">Arquiteturas de Referência <span class="dot"></span> Separação de Preocupações <span class="dot"></span> TEC.1052 — Programação para Internet II <span class="dot"></span> IFPI 2026.2</div>
+    <h1 class="title">Arquitetura Hexagonal na era dos agentes: <em>portas, adaptadores</em> e protocolos que não se pode violar</h1>
+    <div class="deck">A mesma ideia de Alistair Cockburn — isolar o núcleo de negócio do mundo exterior — ganha um motivo novo e mais urgente para existir: quando quem escreve código é um agente de IA, a fronteira do hexágono deixa de ser um diagrama bonito e vira o único freio que continua funcionando quando você não está olhando.</div>
+    <div class="credits">
+      <span><b>Baseado em</b> — Rafael Miguel, <a href="https://chroniclesofapragmaticprogrammer.substack.com/p/arquitetura-hexagonal" target="_blank" rel="noopener">"Arquitetura Hexagonal", Chronicles of a Pragmatic Programmer</a></span>
+      <span><b>Atualizado por</b> — Prof. Rogério Silva com Claude, 2026</span>
+      <span><b>Estudo de caso</b> — Mini-Prontuário Eletrônico (FHIR-lite)</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">Neste artigo</div>
+  <ol>
+    <li><a href="#nucleo">O núcleo e o hospital que não pergunta quem bateu à porta</a></li>
+    <li><a href="#2026">O que muda em 2026: fronteira virou contrato executável</a></li>
+    <li><a href="#pastas">A estrutura em TypeScript + Express</a></li>
+    <li><a href="#cqs">Casos de uso como comandos: CQS de método único</a></li>
+    <li><a href="#agents">AGENTS.md do Mini-Prontuário, com <code>agy</code></a></li>
+    <li><a href="#invariantes">INVARIANTES.md: do desenho ao teste que morde</a></li>
+    <li><a href="#tarefa">Escrevendo a tarefa para o agente</a></li>
+    <li><a href="#prompt">Quatro hábitos de prompt que valem a arquitetura toda</a></li>
+    <li><a href="#portao">O portão e a revisão adversarial</a></li>
+    <li><a href="#fechamento">Por que isso importa mais, não menos, com IA</a></li>
+  </ol>
+</nav>
+
+<article>
+
+<p class="lead">Alistair Cockburn resumiu a motivação da Arquitetura Hexagonal numa frase que qualquer desenvolvedor reconhece de cor: ele estava cansado de apagar incêndios. Sistemas onde a regra de negócio e o framework viviam grudados, onde trocar de banco de dados era uma cirurgia, onde testar a lógica central exigia subir um servidor inteiro. A resposta dele — publicada no início dos anos 2000 — foi simples de enunciar e difícil de manter: <strong>o núcleo não conhece o mundo exterior; o mundo exterior é que se adapta ao núcleo.</strong></p>
+
+<p>Esse artigo é uma atualização daquela ideia para 2026, quando boa parte do código que entra no seu repositório não sai mais dos seus dedos — sai de um agente de IA. A arquitetura continua a mesma. O que mudou é o motivo pelo qual ela deixou de ser opcional. Vamos construir tudo isso em cima de um caso concreto: o <strong>Mini-Prontuário Eletrônico</strong>, o projeto-fio da disciplina, com vocabulário inspirado em HL7 FHIR — <code>Paciente</code>, <code>Encontro</code> — em TypeScript e Express.</p>
+
+<h2 id="nucleo">O núcleo e o hospital que não pergunta quem bateu à porta</h2>
+
+<p>Antes de qualquer diagrama, uma imagem simples. Pense numa central de triagem hospitalar. Um paciente pode chegar de quatro jeitos completamente diferentes: andando pela recepção, de ambulância pela emergência, transferido de outra unidade com uma guia em papel, ou por telefone, marcando uma consulta. Cada porta de entrada tem seu próprio ritual — a recepcionista com o formulário, o paramédico com o protocolo de emergência, a guia de transferência, a ligação telefônica.</p>
+
+<p>Mas depois que o paciente está triado, o protocolo clínico que decide o que fazer com ele é <strong>o mesmo</strong>, não importa por qual porta ele entrou. O médico não trata diferente um paciente que chegou de ambulância de um que chegou andando, uma vez que os dois estão diante dele com a mesma queixa. O protocolo clínico — o núcleo — é indiferente à porta de entrada.</p>
+
+<div class="analogy">
+  <div class="ico">🏥</div>
+  <div>
+    <h4>A central de triagem</h4>
+    <p>Isso é a Arquitetura Hexagonal em uma frase: <strong>portas</strong> são os contratos de entrada e saída que o núcleo entende (o formulário padronizado de triagem); <strong>adaptadores</strong> são os tradutores em cada porta física, que convertem o jeito particular de cada canal (fala, papel, rádio) para esse formulário comum. O núcleo — o protocolo clínico — nunca vê a ambulância, o telefone ou o papel timbrado de outro hospital. Ele só vê o formulário.</p>
+  </div>
+</div>
+
+<p>No Mini-Prontuário, o "formulário padronizado" é o par <strong>DTO de entrada / DTO de saída</strong> de cada caso de uso. As "portas físicas" são a rota HTTP que o navegador chama, o script de importação em lote que a secretaria roda uma vez por mês, o consumidor de fila que processa resultados de exame que chegam de um laboratório parceiro. Três portas de entrada completamente diferentes, uma única regra por trás delas: <code>RegistrarPaciente.execute(input)</code>.</p>
+
+<figure>
+  <div class="fig-frame">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg">
+      <g font-family="Inter">
+        <text x="8" y="16" font-size="10" font-weight="700" fill="#7A7368" letter-spacing="1.2">PORTAS DE ENTRADA · DRIVING</text>
+        <text x="320" y="16" font-size="10" font-weight="700" fill="#C2410C" letter-spacing="1.2" text-anchor="middle">NÚCLEO</text>
+        <text x="632" y="16" font-size="10" font-weight="700" fill="#7A7368" letter-spacing="1.2" text-anchor="end">PORTAS DE SAÍDA · DRIVEN</text>
+
+        <!-- left adapters -->
+        <rect x="8" y="26" width="172" height="48" rx="6" fill="#FDF3EC" stroke="#F0D4C2"/>
+        <text x="22" y="46" font-size="11.5" font-weight="700" fill="#3F444B">Rota Express</text>
+        <text x="22" y="62" font-size="10.5" fill="#7A7368">POST /pacientes</text>
+
+        <rect x="8" y="96" width="172" height="48" rx="6" fill="#FDF3EC" stroke="#F0D4C2"/>
+        <text x="22" y="116" font-size="11.5" font-weight="700" fill="#3F444B">Importação em lote</text>
+        <text x="22" y="132" font-size="10.5" fill="#7A7368">CSV do sistema legado</text>
+
+        <rect x="8" y="166" width="172" height="48" rx="6" fill="#FDF3EC" stroke="#F0D4C2"/>
+        <text x="22" y="186" font-size="11.5" font-weight="700" fill="#3F444B">Consumidor de fila</text>
+        <text x="22" y="202" font-size="10.5" fill="#7A7368">resultado de exame externo</text>
+
+        <!-- connectors left -->
+        <g stroke="#C9C2B6" stroke-width="1.3" fill="none">
+          <path d="M180 50 H210 V150"/>
+          <path d="M180 120 H210"/>
+          <path d="M180 190 H210 V150"/>
+          <path d="M210 150 H245"/>
+        </g>
+        <text x="212" y="145" font-size="9.5" fill="#7A7368" font-family="JetBrains Mono">execute(input)</text>
+
+        <!-- core -->
+        <rect x="245" y="40" width="150" height="220" rx="8" fill="#17191C"/>
+        <text x="320" y="84" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">NÚCLEO DO</text>
+        <text x="320" y="102" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">DOMÍNIO</text>
+        <line x1="270" y1="116" x2="370" y2="116" stroke="#3A3F48"/>
+        <text x="320" y="138" font-size="10.5" fill="#C9C2B6" text-anchor="middle">Paciente · Encontro</text>
+        <text x="320" y="156" font-size="10.5" fill="#C9C2B6" text-anchor="middle">regras clínicas puras</text>
+        <text x="320" y="174" font-size="10.5" fill="#C9C2B6" text-anchor="middle">casos de uso · execute()</text>
+        <rect x="262" y="196" width="116" height="46" rx="5" fill="#241A12"/>
+        <text x="320" y="215" font-size="9.5" font-weight="700" fill="#F0A868" text-anchor="middle">ZERO IMPORTS DE</text>
+        <text x="320" y="230" font-size="9.5" font-weight="700" fill="#F0A868" text-anchor="middle">infra/ · presentation/</text>
+
+        <!-- connectors right -->
+        <g stroke="#C9C2B6" stroke-width="1.3" fill="none">
+          <path d="M395 150 H430"/>
+          <path d="M430 150 V50 H460"/>
+          <path d="M430 150 H460"/>
+          <path d="M430 150 V190 H460"/>
+        </g>
+        <text x="432" y="145" font-size="9.5" fill="#7A7368" font-family="JetBrains Mono" text-anchor="middle">via porta (interface)</text>
+
+        <!-- right adapters -->
+        <rect x="460" y="26" width="172" height="48" rx="6" fill="#EDF4EF" stroke="#B8D4C4"/>
+        <text x="474" y="46" font-size="11.5" font-weight="700" fill="#2F6B4F">SQLite</text>
+        <text x="474" y="62" font-size="10.5" fill="#5A6B60">RepositorioDePacientes</text>
+
+        <rect x="460" y="96" width="172" height="48" rx="6" fill="#EDF4EF" stroke="#B8D4C4"/>
+        <text x="474" y="116" font-size="11.5" font-weight="700" fill="#2F6B4F">Cliente HTTP/HL7</text>
+        <text x="474" y="132" font-size="10.5" fill="#5A6B60">serviço de laboratório</text>
+
+        <rect x="460" y="166" width="172" height="48" rx="6" fill="#EDF4EF" stroke="#B8D4C4"/>
+        <text x="474" y="186" font-size="11.5" font-weight="700" fill="#2F6B4F">Producer de fila</text>
+        <text x="474" y="202" font-size="10.5" fill="#5A6B60">notificação ao laboratório</text>
+
+        <rect x="8" y="252" width="624" height="40" rx="6" fill="#FDF3EC"/>
+        <text x="320" y="270" font-size="11.5" font-weight="700" fill="#C2410C" text-anchor="middle">O núcleo não sabe se a chamada veio de um clique, uma fila ou um agente.</text>
+        <text x="320" y="286" font-size="11.5" font-weight="700" fill="#C2410C" text-anchor="middle">Só conhece a porta.</text>
+      </g>
+    </svg>
+  </div>
+  <figcaption><b>Fig. 1</b> — Três portas de entrada (driving), três portas de saída (driven), um único núcleo no meio. Cada caixa fora do centro é substituível sem que uma linha do domínio mude — é exatamente essa a promessa que Cockburn fez em 2005 e que continua valendo, agora sob outro nome de urgência.</figcaption>
+</figure>
+
+<h2 id="2026">O que muda em 2026: a fronteira virou contrato executável</h2>
+
+<p>No artigo original, a Arquitetura Hexagonal é apresentada como resposta a um problema humano: times acoplam camadas por pressa, por desconhecimento, ou porque "só dessa vez" parecia mais rápido importar o ORM direto na regra de negócio. Esse problema não desapareceu — mas ganhou um segundo personagem, e esse personagem trabalha muito mais rápido que qualquer humano jamais trabalhou.</p>
+
+<p>Um agente de IA não tem preguiça de escrever a camada de tradução certa. Ele tem, isso sim, uma tendência estrutural a pegar o caminho que <em>funciona agora</em> — importar o cliente do banco direto dentro do caso de uso, por exemplo, porque é mais rápido de escrever e os testes que existem hoje não vão notar. Ele não faz isso por preguiça: faz porque, olhando só para a tarefa em mãos, esse caminho realmente resolve o problema em mãos. A arquitetura só sobrevive se a fronteira parar de ser conselho e virar obstáculo físico.</p>
+
+<div class="box quote">
+  <span class="bt">Documentação oficial · Claude Code</span>
+  <p>Diferente das instruções do arquivo de contexto, que são <em>advisórias</em>, hooks são <em>determinísticos</em> e garantem que a ação aconteça — ou, neste caso, que não aconteça.</p>
+</div>
+
+<p>Isso dá à Arquitetura Hexagonal um papel novo em 2026. Ela deixa de ser só uma boa prática de design e passa a ser a unidade natural de <strong>invariante arquitetural</strong> — o tipo de regra que um linter de dependências consegue verificar em segundos, sem entender uma linha de regra de negócio. "Nada em <code>domain/</code> importa de <code>infra/</code>" é uma frase de dez palavras que <code>dependency-cruiser</code> transforma em um portão que barra o PR. Poucas decisões de arquitetura têm um custo de verificação tão baixo para um benefício tão alto contra um agente apressado.</p>
+
+<figure>
+  <div class="fig-frame">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg">
+      <g font-family="Inter">
+        <rect x="0" y="0" width="640" height="72" rx="6" fill="#15171C"/>
+        <text x="18" y="26" font-size="10" font-weight="700" fill="#F0A868" letter-spacing="1.2">CAMADA 3 · HOOK / CI — A TRAVA DA BOMBA DE INFUSÃO</text>
+        <text x="18" y="48" font-size="14" font-weight="700" fill="#ffffff">Impossível violar</text>
+        <text x="18" y="64" font-size="10.5" fill="#9AA0AA">dependency-cruiser bloqueia o build antes de o import existir em produção</text>
+
+        <rect x="0" y="82" width="640" height="72" rx="6" fill="#EDF4EF"/>
+        <text x="18" y="108" font-size="10" font-weight="700" fill="#2F6B4F" letter-spacing="1.2">CAMADA 2 · TESTE — A DUPLA CHECAGEM</text>
+        <text x="18" y="130" font-size="14" font-weight="700" fill="#17191C">Violação é detectada</text>
+        <text x="18" y="146" font-size="10.5" fill="#5A6B60">npm run arch falha, o gate não fecha, o agente vê o erro antes de dizer "pronto"</text>
+
+        <rect x="0" y="164" width="640" height="72" rx="6" fill="#FDF6E7"/>
+        <text x="18" y="190" font-size="10" font-weight="700" fill="#8C5D12" letter-spacing="1.2">CAMADA 1 · AGENTS.MD — O PROTOCOLO NA PAREDE</text>
+        <text x="18" y="212" font-size="14" font-weight="700" fill="#17191C">Violação é provável</text>
+        <text x="18" y="228" font-size="10.5" fill="#8A7550">o agente lê, entende, e sob pressão de contexto longo às vezes ignora</text>
+
+        <rect x="0" y="248" width="640" height="60" rx="6" fill="#FDF3EC"/>
+        <text x="18" y="270" font-size="11.5" font-weight="700" fill="#C2410C">Regra de promoção</text>
+        <text x="18" y="288" font-size="10.5" fill="#3F444B">violou 1x → reescreva · violou 2x → vire teste · violou 3x → vire hook</text>
+        <text x="18" y="303" font-size="10.5" fill="#3F444B">que bloqueia o commit</text>
+      </g>
+    </svg>
+  </div>
+  <figcaption><b>Fig. 2</b> — As mesmas três camadas de qualquer invariante, aplicadas à própria fronteira do hexágono. Uma bomba de infusão hospitalar não confia numa etiqueta escrita à mão para impedir uma dose letal — ela tem uma trava mecânica. A direção de dependência do seu domínio merece o mesmo padrão de confiança.</figcaption>
+</figure>
+
+<h2 id="pastas">A estrutura em TypeScript + Express</h2>
+
+<p>O hexágono, desenhado como pastas de um repositório Node.js, fica assim para o Mini-Prontuário — a mesma divisão em quatro camadas que o restante da disciplina já usa, agora nomeada em função das portas e adaptadores:</p>
+
+<div class="term">
+  <div class="term-bar">mini-prontuario/</div>
+  <pre><span class="k">domain/</span>              entidades, erros, invariantes de negócio
+  Paciente.ts        agregado — construtor privado + fábrica
+  Encontro.ts         agregado — transições de estado válidas
+  DomainError.ts      classe-base; HTTP não existe aqui
+
+<span class="k">application/</span>         casos de uso — a camada das PORTAS
+  pacientes/
+    RegistrarPaciente.ts     comando · execute()
+    ObterPaciente.ts         consulta · execute()
+    portas/
+      RepositorioDePacientes.ts    porta de saída (interface)
+  encontros/
+    RegistrarEncontro.ts
+    portas/
+      RepositorioDeEncontros.ts
+
+<span class="k">infra/</span>              ADAPTADORES de saída — implementam as portas
+  repositorios/
+    RepositorioDePacientesSqlite.ts
+    RepositorioDeEncontrosSqlite.ts
+  laboratorio/
+    ClienteLaboratorioHttp.ts
+
+<span class="k">presentation/</span>       ADAPTADORES de entrada — traduzem HTTP para a porta
+  rotas/
+    pacientes.rotas.ts        router: valida → delega ao controller
+    encontros.rotas.ts
+  controllers/
+    PacientesController.ts     métodos como arrow function
+    EncontrosController.ts
+  middlewares/
+    validar.ts                  injeta validação Zod por rota
+    tratarErroGlobal.ts          único ponto que monta a resposta
+  erros/
+    mapaDeErros.ts               codigo do domínio → status HTTP
+  schemas/
+    RegistrarPacienteSchema.ts
+  composicao.ts                  monta casos de uso + controllers</pre>
+</div>
+
+<p>Repare no que essa árvore não tem: nenhuma pasta chamada <code>services/</code> genérica, nenhuma pasta <code>utils/</code> onde tudo o que não se sabe onde colocar acaba indo parar. Cada pasta responde a uma pergunta do hexágono — <em>o que é regra?</em> (<code>domain/</code>), <em>o que é orquestração da regra?</em> (<code>application/</code>), <em>o que fala com o mundo de fora e entra?</em> (<code>presentation/</code>), <em>o que fala com o mundo de fora e sai?</em> (<code>infra/</code>).</p>
+
+<h2 id="cqs">Casos de uso como comandos: o padrão CQS de método único</h2>
+
+<p>A camada <code>application/</code> é onde o hexágono ganha forma concreta em código, e aqui adotamos um padrão específico: <strong>Command-Query Separation</strong> no nível de classe. Cada operação de negócio é sua própria classe, com um único método público: <code>execute()</code>. Nada de uma classe <code>PacienteService</code> com dez métodos disputando espaço e contexto — dez classes de uma responsabilidade cada.</p>
+
+<div class="dd">
+  <div class="no">
+    <span class="lb">Serviço genérico — evitar</span>
+    <p><code>PacienteService</code> com métodos <code>criar()</code>, <code>atualizar()</code>, <code>buscarPorId()</code>, <code>buscarPorCns()</code>, <code>listar()</code> todos numa classe só. Toda mudança em qualquer operação de paciente mexe no mesmo arquivo — e é exatamente o arquivo que o agente vai reabrir com mais contexto acumulado de tarefas anteriores.</p>
+  </div>
+  <div class="yes">
+    <span class="lb">Comando por classe — usar</span>
+    <p><code>RegistrarPaciente</code>, <code>ObterPaciente</code>, <code>BuscarPacientePorCns</code>: cada um com <code>execute()</code>, cada um testável isolado, cada um com sua própria porta de entrada e porta(s) de saída explícitas no construtor.</p>
+  </div>
+</div>
+
+<p>A porta de entrada de cada caso de uso é a própria interface do método — o par <code>Input</code>/<code>Output</code>. A porta de saída é toda dependência externa que o caso de uso precisa, declarada como interface e injetada pelo construtor. Isso não é apenas estilo: é a Arquitetura Hexagonal aplicada literalmente, uma porta por dependência, tantas quantas forem necessárias.</p>
+
+<div class="term">
+  <div class="term-bar">application/portas/UseCase.ts</div>
+  <pre><span class="c">// contrato comum a todo caso de uso — a "forma" da porta de entrada</span>
+<span class="k">export interface</span> UseCase&lt;Input, Output&gt; {
+  execute(input: Input): Promise&lt;Output&gt;;
+}</pre>
+</div>
+
+<div class="term">
+  <div class="term-bar">application/pacientes/portas/RepositorioDePacientes.ts</div>
+  <pre><span class="c">// porta de SAÍDA — o núcleo declara o que precisa, não como é feito</span>
+<span class="k">export interface</span> RepositorioDePacientes {
+  salvar(paciente: Paciente): Promise&lt;void&gt;;
+  buscarPorCns(cns: <span class="k">string</span>): Promise&lt;Paciente | <span class="k">null</span>&gt;;
+}</pre>
+</div>
+
+<div class="term">
+  <div class="term-bar">domain/Paciente.ts</div>
+  <pre><span class="k">export class</span> Paciente {
+  <span class="k">private constructor</span>(
+    <span class="k">readonly</span> id: <span class="k">string</span>,
+    <span class="k">readonly</span> nome: <span class="k">string</span>,
+    <span class="k">readonly</span> cns: <span class="k">string</span>,
+    <span class="k">readonly</span> dataNascimento: Date,
+  ) {}
+
+  <span class="c">// fábrica: único portão de entrada para criar um Paciente válido</span>
+  <span class="k">static</span> registrar(dados: {
+    nome: <span class="k">string</span>; cns: <span class="k">string</span>; dataNascimento: Date;
+  }): Paciente {
+    <span class="k">if</span> (!/^\d{15}$/.test(dados.cns)) {
+      <span class="k">throw new</span> CnsInvalidoError(dados.cns);
+    }
+    <span class="k">return new</span> Paciente(
+      crypto.randomUUID(), dados.nome, dados.cns, dados.dataNascimento,
+    );
+  }
+}</pre>
+</div>
+
+<div class="term">
+  <div class="term-bar">application/pacientes/RegistrarPaciente.ts</div>
+  <pre><span class="k">export interface</span> RegistrarPacienteInput {
+  nome: <span class="k">string</span>;
+  cns: <span class="k">string</span>;
+  dataNascimento: <span class="k">string</span>; <span class="c">// ISO 8601</span>
+}
+
+<span class="k">export interface</span> RegistrarPacienteOutput {
+  id: <span class="k">string</span>;
+}
+
+<span class="c">// comando · CQS: efeito colateral, retorno mínimo, um único execute()</span>
+<span class="k">export class</span> RegistrarPaciente
+  <span class="k">implements</span> UseCase&lt;RegistrarPacienteInput, RegistrarPacienteOutput&gt; {
+
+  <span class="k">constructor</span>(<span class="k">private readonly</span> pacientes: RepositorioDePacientes) {}
+
+  <span class="k">async</span> execute(input: RegistrarPacienteInput): Promise&lt;RegistrarPacienteOutput&gt; {
+    <span class="k">const</span> existente = <span class="k">await</span> <span class="k">this</span>.pacientes.buscarPorCns(input.cns);
+    <span class="k">if</span> (existente) {
+      <span class="k">throw new</span> CnsDuplicadoError(input.cns);
+    }
+
+    <span class="k">const</span> paciente = Paciente.registrar({
+      nome: input.nome,
+      cns: input.cns,
+      dataNascimento: <span class="k">new</span> Date(input.dataNascimento),
+    });
+
+    <span class="k">await</span> <span class="k">this</span>.pacientes.salvar(paciente);
+    <span class="k">return</span> { id: paciente.id };
+  }
+}</pre>
+</div>
+
+<p>Do lado da consulta, o mesmo padrão, sem efeito colateral — só leitura, e o retorno já é o DTO que a apresentação precisa, sem vazar a entidade de domínio para fora do hexágono:</p>
+
+<div class="term">
+  <div class="term-bar">application/pacientes/ObterPaciente.ts</div>
+  <pre><span class="k">export interface</span> ObterPacienteOutput {
+  id: <span class="k">string</span>; nome: <span class="k">string</span>; cns: <span class="k">string</span>;
+}
+
+<span class="c">// consulta · CQS: sem efeito colateral, sempre retorna o mesmo formato</span>
+<span class="k">export class</span> ObterPaciente
+  <span class="k">implements</span> UseCase&lt;{ cns: <span class="k">string</span> }, ObterPacienteOutput | <span class="k">null</span>&gt; {
+
+  <span class="k">constructor</span>(<span class="k">private readonly</span> pacientes: RepositorioDePacientes) {}
+
+  <span class="k">async</span> execute({ cns }: { cns: <span class="k">string</span> }): Promise&lt;ObterPacienteOutput | <span class="k">null</span>&gt; {
+    <span class="k">const</span> paciente = <span class="k">await</span> <span class="k">this</span>.pacientes.buscarPorCns(cns);
+    <span class="k">if</span> (!paciente) <span class="k">return</span> <span class="k">null</span>;
+    <span class="k">return</span> { id: paciente.id, nome: paciente.nome, cns: paciente.cns };
+  }
+}</pre>
+</div>
+
+<p>Os adaptadores fecham o ciclo — sem nunca vazar para dentro do domínio. O de saída implementa a porta com SQLite; o de entrada traduz a requisição HTTP para o <code>Input</code> e o erro de domínio para um status:</p>
+
+<div class="term">
+  <div class="term-bar">infra/repositorios/RepositorioDePacientesSqlite.ts</div>
+  <pre><span class="k">export class</span> RepositorioDePacientesSqlite <span class="k">implements</span> RepositorioDePacientes {
+  <span class="k">constructor</span>(<span class="k">private readonly</span> db: Database) {}
+
+  <span class="k">async</span> salvar(paciente: Paciente): Promise&lt;void&gt; {
+    <span class="k">this</span>.db.prepare(
+      <span class="s">`INSERT INTO pacientes (id, nome, cns, data_nascimento)
+       VALUES (?, ?, ?, ?)`</span>,
+    ).run(paciente.id, paciente.nome, paciente.cns, paciente.dataNascimento.toISOString());
+  }
+
+  <span class="k">async</span> buscarPorCns(cns: <span class="k">string</span>): Promise&lt;Paciente | <span class="k">null</span>&gt; {
+    <span class="k">const</span> linha = <span class="k">this</span>.db.prepare(
+      <span class="s">`SELECT * FROM pacientes WHERE cns = ?`</span>,
+    ).get(cns);
+    <span class="k">return</span> linha ? mapearLinhaParaPaciente(linha) : <span class="k">null</span>; <span class="c">// snake_case → camelCase aqui, nunca fora daqui</span>
+  }
+}</pre>
+</div>
+
+<h3>Rota fina, Controller com um único trabalho: traduzir</h3>
+
+<p>Até aqui a rota fazia três coisas ao mesmo tempo — validar, chamar o caso de uso, decidir o formato da resposta. Isso funciona para um endpoint. Para vinte, a rota vira o novo lugar onde lógica se esconde, exatamente o problema que o hexágono existe para evitar do outro lado da fronteira. A correção é a mesma receita de sempre: <strong>uma responsabilidade por classe.</strong> O <strong>Controller</strong> é o adaptador de entrada de verdade — a rota só liga fios.</p>
+
+<div class="term">
+  <div class="term-bar">presentation/controllers/PacientesController.ts</div>
+  <pre><span class="k">export class</span> PacientesController {
+  <span class="k">constructor</span>(
+    <span class="k">private readonly</span> registrarPaciente: RegistrarPaciente,
+    <span class="k">private readonly</span> obterPaciente: ObterPaciente,
+  ) {}
+
+  <span class="c">// arrow function de campo: "this" fica preso ao Controller,</span>
+  <span class="c">// mesmo quando o Express chama o método fora de contexto</span>
+  registrar = <span class="k">async</span> (req: Request, res: Response, next: NextFunction) =&gt; {
+    <span class="k">try</span> {
+      <span class="k">const</span> resultado = <span class="k">await</span> <span class="k">this</span>.registrarPaciente.execute(req.body);
+      res.status(201).json(resultado);
+    } <span class="k">catch</span> (erro) {
+      next(erro); <span class="c">// nunca decide status aqui — só repassa</span>
+    }
+  };
+
+  obterPorCns = <span class="k">async</span> (req: Request, res: Response, next: NextFunction) =&gt; {
+    <span class="k">try</span> {
+      <span class="k">const</span> paciente = <span class="k">await</span> <span class="k">this</span>.obterPaciente.execute({ cns: req.params.cns });
+      <span class="k">if</span> (!paciente) {
+        <span class="k">throw new</span> PacienteNaoEncontradoError(req.params.cns);
+      }
+      res.status(200).json(paciente);
+    } <span class="k">catch</span> (erro) {
+      next(erro);
+    }
+  };
+}</pre>
+</div>
+
+<div class="box tip">
+  <span class="bt">Por que arrow function de campo, e não método comum</span>
+  <p>Um método comum (<code>registrar(req, res, next) { ... }</code>) perde o <code>this</code> quando o Express o chama como referência solta — <code>router.post('/x', controller.registrar)</code> passa a <em>função</em>, não o objeto. Sem arrow function, cada rota precisaria de <code>controller.registrar.bind(controller)</code> espalhado em <code>composicao.ts</code>. Arrow function de campo resolve isso uma vez, na definição da classe, e nunca mais se pensa nisso.</p>
+</div>
+
+<div class="dd">
+  <div class="no">
+    <span class="lb">Rota gorda — evitar</span>
+    <p>Validação, chamada do caso de uso e formatação da resposta, tudo dentro de <code>router.post(...)</code>. Testar essa lógica exige subir o Express inteiro; revisar o diff de uma mudança pequena exige ler tudo de novo.</p>
+  </div>
+  <div class="yes">
+    <span class="lb">Rota fina — usar</span>
+    <p><code>router.post('/pacientes', validar(Schema), controller.registrar)</code>. A rota declara <em>o quê</em> — método HTTP, caminho, validação — e delega inteiramente o <em>como</em> ao Controller.</p>
+  </div>
+</div>
+
+<div class="term">
+  <div class="term-bar">presentation/rotas/pacientes.rotas.ts</div>
+  <pre><span class="k">export function</span> rotasDePacientes(controller: PacientesController): Router {
+  <span class="k">const</span> router = Router();
+
+  router.post(
+    <span class="s">'/pacientes'</span>,
+    validar(RegistrarPacienteSchema),  <span class="c">// 1. valida o formato</span>
+    controller.registrar,               <span class="c">// 2. delega ao Controller</span>
+  );
+
+  router.get(<span class="s">'/pacientes/:cns'</span>, controller.obterPorCns);
+
+  <span class="k">return</span> router;
+}</pre>
+</div>
+
+<h3>Validação como middleware injetável, um <code>validar(schema)</code> por rota</h3>
+
+<p>A validação de formato — "isso é um CNS de 15 dígitos, ou não é" — não é regra de negócio, é forma de entrada. Ela mora numa fábrica de middleware: uma função que recebe um schema Zod e devolve o handler do Express, encaixado <em>antes</em> do Controller na cadeia da rota. Se a validação falhar, ela nunca chega ao Controller — vai direto para o middleware global de erro.</p>
+
+<div class="term">
+  <div class="term-bar">presentation/middlewares/validar.ts</div>
+  <pre><span class="k">export function</span> validar(schema: ZodSchema) {
+  <span class="k">return</span> (req: Request, res: Response, next: NextFunction) =&gt; {
+    <span class="k">const</span> resultado = schema.safeParse(req.body);
+    <span class="k">if</span> (!resultado.success) {
+      <span class="k">return</span> next(resultado.error); <span class="c">// ZodError — o middleware global sabe ler</span>
+    }
+    req.body = resultado.data; <span class="c">// corpo tipado e já saneado a partir daqui</span>
+    next();
+  };
+}</pre>
+</div>
+
+<div class="term">
+  <div class="term-bar">presentation/schemas/RegistrarPacienteSchema.ts</div>
+  <pre><span class="k">export const</span> RegistrarPacienteSchema = z.object({
+  nome: z.string().min(1),
+  cns: z.string().regex(/^\d{15}$/, <span class="s">'CNS deve ter 15 dígitos'</span>),
+  dataNascimento: z.string().datetime(),
+});</pre>
+</div>
+
+<h3>Erro de domínio continua sem saber o que é HTTP — quem traduz é o mapa</h3>
+
+<p>O <code>domain/</code> não ganha nenhuma ideia nova nesta evolução — ele continua isolado, exatamente como no invariante A1. O que muda é <em>como</em> a fronteira traduz o erro para fora. Em vez de uma cadeia de <code>if (erro instanceof X)</code> crescendo dentro do middleware a cada novo erro criado, cada erro de domínio carrega um <code>codigo</code> — uma string semântica, não um número HTTP — e uma tabela em <code>presentation/</code> decide o status a partir dele.</p>
+
+<div class="term">
+  <div class="term-bar">domain/DomainError.ts</div>
+  <pre><span class="k">export abstract class</span> DomainError <span class="k">extends</span> Error {
+  <span class="k">abstract readonly</span> codigo: <span class="k">string</span>; <span class="c">// semântico — não é status HTTP</span>
+  <span class="k">constructor</span>(message: <span class="k">string</span>, <span class="k">readonly</span> details?: Record&lt;<span class="k">string</span>, <span class="k">unknown</span>&gt;) {
+    <span class="k">super</span>(message);
+  }
+}
+
+<span class="k">export class</span> CnsDuplicadoError <span class="k">extends</span> DomainError {
+  <span class="k">readonly</span> codigo = <span class="s">'CNS_DUPLICADO'</span>;
+  <span class="k">constructor</span>(cns: <span class="k">string</span>) {
+    <span class="k">super</span>(<span class="s">`CNS ${cns} já cadastrado`</span>, { cns });
+  }
+}
+
+<span class="k">export class</span> PacienteNaoEncontradoError <span class="k">extends</span> DomainError {
+  <span class="k">readonly</span> codigo = <span class="s">'PACIENTE_NAO_ENCONTRADO'</span>;
+  <span class="k">constructor</span>(id: <span class="k">string</span>) {
+    <span class="k">super</span>(<span class="s">`Paciente ${id} não encontrado`</span>, { id });
+  }
+}
+
+<span class="k">export class</span> EncontroFinalizadoError <span class="k">extends</span> DomainError {
+  <span class="k">readonly</span> codigo = <span class="s">'ENCONTRO_FINALIZADO'</span>;
+  <span class="k">constructor</span>(encontroId: <span class="k">string</span>) {
+    <span class="k">super</span>(<span class="s">`Encontro ${encontroId} já finalizado`</span>, { encontroId });
+  }
+}</pre>
+</div>
+
+<div class="term">
+  <div class="term-bar">presentation/erros/mapaDeErros.ts</div>
+  <pre><span class="c">// única fonte de verdade: codigo do domínio → status HTTP</span>
+<span class="c">// adicionar um erro novo é adicionar uma linha aqui, não editar o middleware</span>
+<span class="k">export const</span> mapaDeErros: Record&lt;<span class="k">string</span>, <span class="k">number</span>&gt; = {
+  CNS_DUPLICADO: 409,
+  PACIENTE_NAO_ENCONTRADO: 404,
+  ENCONTRO_FINALIZADO: 409,
+};
+
+<span class="k">export const</span> STATUS_PADRAO_DOMINIO = 400;</pre>
+</div>
+
+<div class="term">
+  <div class="term-bar">presentation/middlewares/tratarErroGlobal.ts</div>
+  <pre><span class="c">// único middleware de erro do app — registrado por último, depois de todas as rotas</span>
+<span class="k">export function</span> tratarErroGlobal(erro: <span class="k">unknown</span>, req: Request, res: Response, next: NextFunction) {
+  <span class="k">if</span> (erro <span class="k">instanceof</span> ZodError) {
+    <span class="k">return</span> res.status(400).json({
+      mensagem: <span class="s">'Dados inválidos'</span>,
+      codigo: <span class="s">'ENTRADA_INVALIDA'</span>,
+      details: erro.flatten().fieldErrors,
+    });
+  }
+
+  <span class="k">if</span> (erro <span class="k">instanceof</span> DomainError) {
+    <span class="k">const</span> status = mapaDeErros[erro.codigo] ?? STATUS_PADRAO_DOMINIO;
+    <span class="k">return</span> res.status(status).json({
+      mensagem: erro.message,
+      codigo: erro.codigo,
+      details: erro.details ?? <span class="k">null</span>,
+    });
+  }
+
+  console.error(erro); <span class="c">// erro não mapeado: log completo, resposta genérica</span>
+  <span class="k">return</span> res.status(500).json({
+    mensagem: <span class="s">'Erro interno'</span>,
+    codigo: <span class="s">'ERRO_INTERNO'</span>,
+  });
+}</pre>
+</div>
+
+<figure>
+  <div class="fig-frame">
+    <svg viewBox="0 0 640 210" xmlns="http://www.w3.org/2000/svg">
+      <g font-family="Inter">
+        <text x="0" y="12" font-size="10" font-weight="700" fill="#2F6B4F" letter-spacing="1.2">CAMINHO FELIZ →</text>
+        <rect x="0" y="20" width="140" height="46" rx="6" fill="#EDF4EF" stroke="#B8D4C4"/>
+        <text x="14" y="40" font-size="11" font-weight="700" fill="#2F6B4F">Router</text>
+        <text x="14" y="56" font-size="9.5" fill="#5A6B60">POST /pacientes</text>
+
+        <rect x="166" y="20" width="140" height="46" rx="6" fill="#EDF4EF" stroke="#B8D4C4"/>
+        <text x="180" y="40" font-size="11" font-weight="700" fill="#2F6B4F">validar(schema)</text>
+        <text x="180" y="56" font-size="9.5" fill="#5A6B60">middleware Zod</text>
+
+        <rect x="332" y="20" width="140" height="46" rx="6" fill="#EDF4EF" stroke="#B8D4C4"/>
+        <text x="346" y="40" font-size="11" font-weight="700" fill="#2F6B4F">Controller</text>
+        <text x="346" y="56" font-size="9.5" fill="#5A6B60">arrow function</text>
+
+        <rect x="498" y="20" width="142" height="46" rx="6" fill="#EDF4EF" stroke="#B8D4C4"/>
+        <text x="512" y="40" font-size="11" font-weight="700" fill="#2F6B4F">UseCase.execute()</text>
+        <text x="512" y="56" font-size="9.5" fill="#5A6B60">caso de uso</text>
+
+        <g stroke="#B8D4C4" stroke-width="1.4" fill="none">
+          <path d="M140 43 H166"/><path d="M306 43 H332"/><path d="M472 43 H498"/>
+        </g>
+
+        <text x="640" y="90" font-size="10" font-weight="700" fill="#A93226" letter-spacing="1.2" text-anchor="end">← ERRO SOBE PELA CADEIA</text>
+        <rect x="498" y="98" width="142" height="46" rx="6" fill="#FBEEEC" stroke="#E7B9B2"/>
+        <text x="512" y="118" font-size="11" font-weight="700" fill="#A93226">lança DomainError</text>
+        <text x="512" y="134" font-size="9.5" fill="#7A5550">dentro do execute()</text>
+
+        <rect x="332" y="98" width="140" height="46" rx="6" fill="#FBEEEC" stroke="#E7B9B2"/>
+        <text x="346" y="118" font-size="11" font-weight="700" fill="#A93226">next(erro)</text>
+        <text x="346" y="134" font-size="9.5" fill="#7A5550">Controller só repassa</text>
+
+        <rect x="166" y="98" width="140" height="46" rx="6" fill="#FBEEEC" stroke="#E7B9B2"/>
+        <text x="180" y="118" font-size="11" font-weight="700" fill="#A93226">tratarErroGlobal</text>
+        <text x="180" y="134" font-size="9.5" fill="#7A5550">único middleware de erro</text>
+
+        <rect x="0" y="98" width="140" height="46" rx="6" fill="#FBEEEC" stroke="#E7B9B2"/>
+        <text x="14" y="118" font-size="11" font-weight="700" fill="#A93226">mapaDeErros</text>
+        <text x="14" y="134" font-size="9.5" fill="#7A5550">codigo → status</text>
+
+        <g stroke="#E7B9B2" stroke-width="1.4" fill="none">
+          <path d="M498 121 H472"/><path d="M332 121 H306"/><path d="M166 121 H140"/>
+        </g>
+
+        <rect x="0" y="160" width="640" height="42" rx="6" fill="#FDF3EC"/>
+        <text x="320" y="178" font-size="11" font-weight="700" fill="#C2410C" text-anchor="middle">Domínio nunca escolhe o status HTTP. Ele só nomeia o que aconteceu —</text>
+        <text x="320" y="194" font-size="11" font-weight="700" fill="#C2410C" text-anchor="middle">o mapa, em presentation/, é quem decide o número.</text>
+      </g>
+    </svg>
+  </div>
+  <figcaption><b>Fig. 3</b> — Duas linhas do tempo da mesma requisição. Em cima, o caminho de sucesso, sempre para a frente. Embaixo, o caminho de erro — que sobe de volta pela mesma cadeia via <code>next(erro)</code>, até o único middleware que sabe montar uma resposta de erro.</figcaption>
+</figure>
+
+<p>O ganho não é só estético. Adicionar um erro de negócio novo — digamos, um limite de tentativas de login — vira uma linha em <code>mapaDeErros.ts</code>, não uma edição no meio de um <code>if/else</code> que já tem dez casos. E qualquer revisor, humano ou <code>agy</code>, consegue conferir a cobertura completa de erros olhando um único arquivo pequeno, em vez de caçar <code>instanceof</code> espalhados pela base de código.</p>
+
+<h2 id="agents">AGENTS.md do Mini-Prontuário, com <code>agy</code></h2>
+
+<p>Três ferramentas dominam o desenvolvimento assistido por agentes em 2026 — Claude Code, Codex e o Antigravity CLI, cujo binário se chama <code>agy</code>. As três leem <code>AGENTS.md</code> nativamente (o Claude Code lê via importação de duas linhas), então um arquivo único basta para qualquer uma delas — inclusive para a ferramenta padrão adotada nesta disciplina.</p>
+
+<div class="term">
+  <div class="term-bar">AGENTS.md — Mini-Prontuário</div>
+  <pre><span class="k"># AGENTS.md — Mini-Prontuário (FHIR-lite)</span>
+
+<span class="k">## Stack</span>
+Node.js 20 / Express 5 / TypeScript / better-sqlite3
+Validação: Zod · Sem ORM
+
+<span class="k">## Comandos</span>
+npm run dev              sobe o servidor local
+npm run gate              lint + types + arch + test, nessa ordem
+npm run test:one -- &lt;t&gt;   teste único (PREFIRA este)
+
+<span class="k">## Layout</span>
+domain/          entidades, erros de domínio, invariantes
+                  ZERO imports de application/infra/presentation
+application/      casos de uso (1 classe = 1 operação), portas
+infra/            adaptadores: sqlite, filas, integrações externas
+presentation/      rotas (finas) + controllers + schemas Zod
+                  + middlewares HTTP
+
+<span class="k">## Convenções que divergem do padrão</span>
+- Caso de uso é classe com um único método `execute()`.
+  Nome no infinitivo do domínio: RegistrarPaciente,
+  ObterPaciente, RegistrarEncontro.
+- Toda porta (entrada e saída) é uma interface em
+  application/. Adaptador nunca é referenciado fora de
+  infra/ e presentation/.
+- Controller é classe; método de rota é arrow function de
+  campo (`metodo = (req, res, next) => {...}`), nunca
+  método comum — evita `.bind(this)` espalhado.
+- Rota só faz: `validar(schema) → controller.metodo`.
+  Nenhuma lógica de negócio em rotas/.
+- Erro de domínio expõe `codigo` (string semântica), nunca
+  status HTTP. presentation/erros/mapaDeErros.ts traduz
+  codigo → status. tratarErroGlobal é o único middleware
+  que monta resposta de erro.
+
+<span class="k">## Regras de trabalho</span>
+- Antes de criar um caso de uso, olhe um irmão existente
+  em application/pacientes/ e siga a mesma forma.
+- Erro de domínio novo: crie a classe em domain/, some o
+  `codigo` em mapaDeErros.ts. Não edite tratarErroGlobal.
+- snake_case do banco vira camelCase dentro do repositório
+  — nunca vaza para application/.
+- Rode `npm run gate` antes de dizer que a tarefa terminou.
+
+<span class="k">## Do-not</span>
+- Não abra conexão com o banco fora de
+  infra/repositorios/.
+- Não adicione framework de DI. Composição manual em
+  presentation/composicao.ts.
+- Não desabilite regra do dependency-cruiser para o gate
+  passar. Corrija a dependência, não a régua.
+- Não empilhe `if (erro instanceof X)` dentro do
+  middleware global. Adicione uma entrada em
+  mapaDeErros.ts.
+
+<span class="k">## Invariantes</span>
+Ver INVARIANTES.md. Se a tarefa parecer exigir violar um
+deles, PARE e pergunte antes de prosseguir.
+
+<span class="k">## Agente padrão desta disciplina</span>
+Usamos `agy` (Antigravity CLI) em sala.
+`agy inspect` mostra o que foi carregado deste arquivo
+antes de cada tarefa — rode sempre no início da sessão.</pre>
+</div>
+
+<p>Pouco mais de quarenta linhas — o mesmo tamanho que se espera de qualquer <code>AGENTS.md</code> saudável, porque cada linha respondeu "sim" à pergunta que organiza o arquivo inteiro: <em>remover isto faria o agente cometer um erro?</em> A explicação de que "Paciente é uma entidade de domínio importante" não entra — o agente já sabe ler o código e descobrir isso. A convenção de nomear casos de uso no infinitivo entra, porque é uma escolha nossa que nenhum modelo adivinha sozinho.</p>
+
+<h2 id="invariantes">INVARIANTES.md: do desenho no quadro ao teste que morde</h2>
+
+<p>O hexágono, sozinho, protege a <em>direção</em> das dependências. Mas o Mini-Prontuário tem regras de negócio que também precisam sobreviver a um agente apressado — e essas regras não moram numa seta do diagrama, moram dentro da entidade, onde não existe caminho alternativo para contorná-las.</p>
+
+<div class="box warn">
+  <span class="bt">Onde a regra de negócio não pode morar</span>
+  <p>Se a imutabilidade de um Encontro finalizado estiver checada num <code>if</code> espalhado pela rota, o agente vai contornar essa checagem na próxima feature — sem má intenção, porque o caminho alternativo <em>funciona</em> e os testes existentes continuam verdes. Regra que precisa sobreviver a agentes mora na entidade.</p>
+</div>
+
+<div class="term">
+  <div class="term-bar">INVARIANTES.md — Mini-Prontuário</div>
+  <pre><span class="k">### A1 — Direção de dependência</span>
+
+<span class="s">Invariante:</span> domain/ não importa de application/, infra/
+nem presentation/.
+
+<span class="s">Caminho seguro:</span> precisa de algo externo no domínio?
+Declare uma interface em application/&lt;contexto&gt;/portas/
+e implemente em infra/.
+
+<span class="s">Enforcement:</span> dependency-cruiser, regra
+`no-domain-outbound`, roda em `npm run arch`.
+
+<span class="k">### N1 — CNS do paciente é único</span>
+
+<span class="s">Invariante:</span> não existem dois Pacientes com o mesmo CNS
+no sistema.
+
+<span class="s">Caminho seguro:</span> RegistrarPaciente sempre consulta
+buscarPorCns antes de criar. Nunca insira direto pelo
+repositório fora do caso de uso.
+
+<span class="s">Enforcement:</span> RegistrarPaciente.execute() lança
+CnsDuplicadoError se já existir
++ test_registrar_paciente_cns_duplicado_rejeita
+(passa hoje e FALHA se a checagem for removida).
+
+<span class="k">### N2 — Encontro finalizado é imutável</span>
+
+<span class="s">Invariante:</span> depois que um Encontro muda para status
+`finalizado`, nenhum campo clínico dele pode ser alterado.
+
+<span class="s">Caminho seguro:</span> uma correção pós-finalização cria um
+Encontro de retificação vinculado ao original — nunca edita
+o registro já assinado pelo profissional.
+
+<span class="s">Enforcement:</span> Encontro.registrarObservacao() lança
+EncontroFinalizadoError se status = FINALIZADO
++ test_encontro_finalizado_rejeita_edicao.</pre>
+</div>
+
+<p>N2 vale um comentário à parte. Registro clínico assinado não é um detalhe técnico — é um princípio do próprio prontuário eletrônico, com peso legal: uma vez que o profissional fechou o atendimento, o registro precisa continuar confiável para quem o ler depois, inclusive em auditoria. É exatamente o tipo de regra que, escrita só em prosa, um agente violaria sem perceber a gravidade — porque, do ponto de vista dele, "editar um campo" é uma operação inofensiva.</p>
+
+<p>Uma seção final do arquivo, separada, cobre o que sempre exige aprovação humana explícita — independente de quão verde esteja o gate:</p>
+
+<ul>
+  <li>Migração no schema do banco (tabelas de <code>pacientes</code> e <code>encontros</code>)</li>
+  <li>Qualquer mudança em autenticação, autorização ou controle de acesso a dado de paciente</li>
+  <li>Alteração no contrato público da API (rotas, formatos de payload já em uso)</li>
+  <li>Qualquer alteração que amplie quem pode ler dado clínico — dado de saúde é dado sensível</li>
+</ul>
+
+<p>Estes não dependem da disciplina do agente: têm hook de bloqueio de caminho protegido, o mesmo mecanismo já usado para <code>migrations/</code> e variáveis de ambiente em qualquer projeto — só que aqui a lista inclui explicitamente tudo que toca dado clínico.</p>
+
+<h2 id="tarefa">Escrevendo a tarefa para o agente</h2>
+
+<p>O formato de quatro campos — <strong>Goal</strong>, <strong>Context</strong>, <strong>Constraints</strong>, <strong>Done when</strong> — funciona particularmente bem em arquitetura hexagonal, porque cada campo tem um lugar natural para citar exatamente a camada certa: <em>Context</em> aponta o caso de uso-irmão a seguir, <em>Constraints</em> cita o invariante que não pode ser violado, <em>Done when</em> vira o teste que ataca a porta nova.</p>
+
+<div class="term">
+  <div class="term-bar">prompt ruim — o agente vai adivinhar a camada errada</div>
+  <pre><span class="w">&gt;</span> adiciona registro de consulta no prontuário</pre>
+</div>
+
+<p>Vago o bastante para o agente decidir sozinho onde mora a regra — e a decisão mais provável, sem constraints, é colocá-la na rota, porque é o caminho mais curto entre a requisição e a resposta. É exatamente o oposto do que queremos.</p>
+
+<div class="term">
+  <div class="term-bar">prompt bom — a mesma tarefa, com portas nomeadas</div>
+  <pre><span class="k">Goal</span>
+Pacientes atendidos em consulta precisam ter o atendimento
+registrado como recurso Encontro, vinculado ao Paciente por
+pacienteId. Hoje só existe o cadastro de Paciente — não há
+como registrar um atendimento.
+
+<span class="k">Context</span>
+- @application/pacientes/RegistrarPaciente.ts (padrão de
+  caso de uso a seguir)
+- @presentation/controllers/PacientesController.ts (padrão
+  de controller e rota a seguir)
+- @domain/Paciente.ts
+- @domain/DomainError.ts
+- Vocabulário: Encontro = HL7 Encounter (motivo, data,
+  status: em-andamento | finalizado)
+
+<span class="k">Constraints</span>
+- INVARIANTES A1: domain/ sem imports de application/
+  infra/presentation/
+- Novo caso de uso RegistrarEncontro, único método execute()
+- Nova porta de saída: RepositorioDeEncontros, em
+  application/encontros/portas/
+- EncontrosController com arrow function; rota só faz
+  validar(schema) → controller.registrar
+- Erro PacienteInexistenteError com `codigo` próprio +
+  entrada nova em mapaDeErros.ts (404)
+- Fora de escopo: edição de encontro existente, listagem
+  por paciente, anexo de exame
+
+<span class="k">Done when</span>
+- npm run gate passa
+- test_registrar_encontro_paciente_inexistente_rejeita
+  passa e FALHA se a validação for revertida
+- POST /pacientes/:id/encontros retorna 201 com o id do
+  encontro criado
+- POST /pacientes/:id/encontros para paciente inexistente
+  retorna 404, não 500</pre>
+</div>
+
+<div class="box tip">
+  <span class="bt">O teste do "falha se revertido"</span>
+  <p>Peça sempre isso no Done when: um teste que <em>falha</em> se a correção for desfeita. Um teste que passa antes e depois da mudança não está testando a mudança nenhuma — e um agente, sob pressão de fechar a tarefa rápido, escreve esse tipo de teste inofensivo com facilidade desconfortável.</p>
+</div>
+
+<h2 id="prompt">Quatro hábitos de prompt que valem a arquitetura toda</h2>
+
+<p>A arquitetura hexagonal, bem desenhada, não te protege de um prompt ruim — ela só torna mais barato consertar o estrago, porque o estrago fica contido numa camada. Quatro hábitos, aplicados a qualquer prompt de implementação neste projeto:</p>
+
+<ul>
+  <li><strong>Arquivos com <code>@</code></strong> em vez de descrever onde o código mora. "<code>@application/pacientes/RegistrarPaciente.ts</code>" custa três tokens e elimina uma rodada inteira de busca.</li>
+  <li><strong>Um padrão-irmão existente a seguir.</strong> "Veja como <code>RegistrarPaciente</code> separa porta de entrada e porta de saída" vale mais que três parágrafos explicando CQS.</li>
+  <li><strong>O sintoma, não o diagnóstico</strong>, quando for bug. "O CNS duplicado não retorna 409, retorna 500" é melhor que "a validação de CNS está quebrada" — você pode estar errado sobre a causa, e o agente perde tempo confirmando o seu diagnóstico antes de olhar o sintoma de verdade.</li>
+  <li><strong>Contrato de API em texto, não em prosa.</strong> Cole o schema Zod ou o exemplo de payload — é o "formulário padronizado" da nossa analogia, e funciona pelo mesmo motivo.</li>
+</ul>
+
+<div class="tbl-wrap">
+<table>
+  <tr><th>Pedido vago</th><th>Pedido verificável</th></tr>
+  <tr><td>"valida o CNS"</td><td>"escreva <code>validarCns</code>. Casos: 15 dígitos numéricos → válido; menos de 15 → inválido; com letras → inválido. Rode os testes depois de implementar."</td></tr>
+  <tr><td>"o registro de consulta não fecha status"</td><td>"POST /pacientes/:id/encontros/:eid/finalizar não muda o status para <code>finalizado</code> no banco, só retorna 200. Corrija a causa raiz, não o retorno da rota."</td></tr>
+  <tr><td>"organiza o prontuário"</td><td>"mova a lógica de validação de CNS que está em <code>PacientesController.registrar</code> para dentro de <code>Paciente.registrar()</code>, seguindo INVARIANTES A1."</td></tr>
+  <tr><td>"adiciona teste pro paciente"</td><td>"escreva um teste para <code>RegistrarPaciente</code> cobrindo o caso de CNS já existente. Use um repositório fake, não mock de SQLite."</td></tr>
+</table>
+</div>
+
+<h2 id="portao">O portão e a revisão adversarial</h2>
+
+<p>Todo invariante deste artigo só é real se um único comando consegue verificá-lo, sempre na mesma ordem, rodando local e no CI. Para o Mini-Prontuário isso é um script pequeno — passos baratos primeiro, para falhar cedo e economizar tokens da sessão:</p>
+
+<div class="term">
+  <div class="term-bar">gate.sh</div>
+  <pre><span class="c">#!/usr/bin/env bash</span>
+<span class="k">set</span> -euo pipefail
+
+<span class="c"># 1 formato e lint</span>
+npm run lint
+
+<span class="c"># 2 tipos</span>
+npm run types          <span class="c"># tsc --noEmit</span>
+
+<span class="c"># 3 arquitetura — INVARIANTES A*</span>
+npm run arch           <span class="c"># dependency-cruiser</span>
+
+<span class="c"># 4 testes — inclui os que atacam N1, N2</span>
+npm run test
+
+<span class="k">echo</span> <span class="s">"gate ok"</span></pre>
+</div>
+
+<p>E, como qualquer diff, o dele merece um revisor em contexto novo — alguém (ou algum agente) que não carrega o raciocínio de quem implementou, só o resultado. No caso de uma arquitetura em camadas, o que esse segundo olhar mais frequentemente pega é justamente o que a Camada 1 da Figura 2 deixa passar: um import que atravessou a fronteira sem que ninguém tivesse decidido isso conscientemente.</p>
+
+<div class="term">
+  <div class="term-bar">agy</div>
+  <pre><span class="w">&gt;</span> Use um subagente para revisar o diff contra
+  PLAN.md e INVARIANTES.md.
+
+  Verifique:
+  - domain/ não ganhou nenhum import de infra/ ou
+    presentation/
+  - o novo caso de uso tem um único método execute()
+  - N2 (Encontro finalizado é imutável) não foi violado
+  - toda porta nova tem uma interface correspondente em
+    application/&lt;contexto&gt;/portas/
+
+  Reporte lacunas de corretude e de fronteira arquitetural.
+  NÃO reporte preferências de estilo.
+
+<span class="c">$</span> agy inspect   <span class="c"># confirma o que o agente carregou antes da revisão</span></pre>
+</div>
+
+<div class="box tip">
+  <span class="bt">Aplicação imediata</span>
+  <p>Peça a esse mesmo revisor que rode <code>npm run arch</code> como parte da checagem. Um invariante arquitetural violado costuma aparecer ali antes de aparecer em qualquer leitura humana do diff — é a Camada 2 fazendo o trabalho que a Camada 1 não conseguiu garantir sozinha.</p>
+</div>
+
+<h2 id="fechamento">Por que isso importa mais, não menos, com IA</h2>
+
+<p>A Arquitetura Hexagonal nasceu para resolver um problema de disciplina humana: equipes que, sob pressão de prazo, colam a regra de negócio no framework que está mais à mão. Em 2026, o "sob pressão de prazo" virou "sob pressão de terminar a tarefa em vinte segundos" — e o agente que faz isso não é preguiçoso nem descuidado. Ele só não tem, por padrão, nenhum motivo para preferir a porta certa à solução mais direta. Esse motivo é o que você instala.</p>
+
+<div class="box rule">
+  <span class="bt">A regra que organiza tudo, de novo</span>
+  <p>Um diagrama de hexágono no quadro nunca impediu ninguém de importar o SQLite direto no domínio. Um teste de arquitetura, sim. A fronteira que sobrevive a um agente é a que tem uma consequência mecânica quando é cruzada — não a que está bem desenhada no <code>docs/arquitetura.md</code>.</p>
+</div>
+
+<p class="pull">A fronteira do hexágono não é um desenho — é o que sobra depois que você tenta violá-la e falha.</p>
+<p class="pull">Quem entra pela porta muda a cada semana. O que está dentro do núcleo, quase nunca deveria.</p>
+<p class="pull">CLAUDE.md e AGENTS.md documentam a intenção. Teste e hook garantem o resultado — e só o resultado sobrevive a um agente com pressa.</p>
+
+<p>Volte à central de triagem uma última vez. Ninguém contrataria um paramédico brilhante e depois confiaria só na boa vontade dele para não pular a fila de emergência — existe protocolo, existe checagem dupla, existe alarme. Um agente de IA é, nesse sentido, exatamente esse paramédico: extraordinariamente competente na tarefa em mãos, e sem nenhuma obrigação de saber, sozinho, que o CNS não pode duplicar ou que um Encontro assinado não se edita. Essa obrigação é a arquitetura que você constrói ao redor dele — e é ela, não o talento do agente, que decide se o prontuário eletrônico do paciente ainda é confiável daqui a cinco anos.</p>
+
+</article>
+</div>
+
+<footer>
+  <div class="wrap" style="padding:0;">
+    <p style="margin:0 0 8px;"><span class="badge">Fontes</span></p>
+    <p style="margin:0 0 6px;">Artigo original: Rafael Miguel, <a href="https://chroniclesofapragmaticprogrammer.substack.com/p/arquitetura-hexagonal" target="_blank" rel="noopener">"Arquitetura Hexagonal: O que é, pra que serve e como pode salvar seu código do caos"</a>, Chronicles of a Pragmatic Programmer.</p>
+    <p style="margin:0 0 6px;">Arcabouço de desenvolvimento dirigido por IA (AGENTS.md, INVARIANTES.md, gate, camadas de enforcement, ciclo de tarefa, <code>agy</code>): material de apoio "Desenvolvimento Dirigido por IA" da disciplina.</p>
+    <p style="margin:0;">Estudo de caso e exemplos de código: Mini-Prontuário Eletrônico, projeto-fio de TEC.1052 — Programação para Internet II, IFPI Campus Teresina Central, 2026.2.</p>
+    <div class="byline-end">🧩 Arquiteturas de Referência — Separação de Preocupações</div>
+  </div>
+</footer>
+
+</body>
+</html>
