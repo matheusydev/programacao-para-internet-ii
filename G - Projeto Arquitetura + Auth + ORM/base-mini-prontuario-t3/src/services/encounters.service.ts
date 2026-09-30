@@ -35,8 +35,8 @@ function toEncounterJson(row: EncounterRow) {
 
 const SELECT = "SELECT id, patient_id, started_at, chief_complaint, notes FROM encounters";
 
-export function listEncountersByPatient(patientId: number) {
-  getPatientById(patientId); // 404 se o paciente não existe
+export async function listEncountersByPatient(patientId: number) {
+  await getPatientById(patientId); // 404 se o paciente não existe
 
   // Ordenamos no SQL: o banco tem índice e o dado chega pronto.
   const rows = db
@@ -54,8 +54,8 @@ export function getEncounterById(id: number) {
   return toEncounterJson(row);
 }
 
-export function createEncounter(patientId: number, input: CreateEncounterInput) {
-  getPatientById(patientId);
+export async function createEncounter(patientId: number, input: CreateEncounterInput) {
+  await getPatientById(patientId);
 
   const result = db
     .prepare(
