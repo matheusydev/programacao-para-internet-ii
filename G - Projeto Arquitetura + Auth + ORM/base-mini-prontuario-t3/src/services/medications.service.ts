@@ -27,9 +27,9 @@ function toMedicationJson(row: MedicationRow) {
 
 const SELECT = "SELECT id, encounter_id, medication, dosage FROM medication_requests";
 
-export function listMedicationsByEncounter(request: Request) {
+export async function listMedicationsByEncounter(request: Request) {
   const encounterId = Number(request.params.encounterId);
-  getEncounterById(encounterId); // 404 se o atendimento não existe
+  await getEncounterById(encounterId); // 404 se o atendimento não existe
 
   const rows = db
     .prepare(`${SELECT} WHERE encounter_id = ? ORDER BY id`)
@@ -38,8 +38,8 @@ export function listMedicationsByEncounter(request: Request) {
   return rows.map(toMedicationJson);
 }
 
-export function createMedication(encounterId: number, input: CreateMedicationInput) {
-  getEncounterById(encounterId);
+export async function createMedication(encounterId: number, input: CreateMedicationInput) {
+  await getEncounterById(encounterId);
 
   const result = db
     .prepare(
