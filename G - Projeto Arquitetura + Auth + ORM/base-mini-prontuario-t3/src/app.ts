@@ -15,14 +15,17 @@ import { authRouter } from "./routes/auth.routes";
 import { errorHandler } from "./middlewares/errorHandler";
 import { configurePatientsRepository } from "./services/patients.service";
 import { configureEncountersRepository } from "./services/encounters.service";
+import { configureMedicationsRepository } from "./services/medications.service";
 import { SqlitePatientsRepository } from "./repositories/sqlite-patients.repository";
 import { SqliteEncountersRepository } from "./repositories/sqlite-encounters.repository";
+import { SqliteMedicationsRepository } from "./repositories/sqlite-medications.repository";
 
 /* Montagem das dependências (composition root): o ÚNICO lugar que
    escolhe qual adapter cada service usa. Trocar SQLite por Prisma
    (trilha ORM) muda estas linhas — e nenhum service. */
 configurePatientsRepository(new SqlitePatientsRepository());
 configureEncountersRepository(new SqliteEncountersRepository());
+configureMedicationsRepository(new SqliteMedicationsRepository());
 
 export const app = express();
 
