@@ -1,53 +1,45 @@
 /**
  * Service de MedicationRequest (a prescrição de um atendimento).
  *
- * TODO ARQ-3 — extrair `repositories/medications.repository.ts`
- * (interface + adapter SQLite), como nos ARQ-1 e ARQ-2.
+ * ARQ-3 feito: o SQL saiu daqui e foi para
+ * repositories/sqlite-medications.repository.ts. Este service conhece
+ * apenas a INTERFACE MedicationsRepository (import type) — quem
+ * escolhe a implementação é a montagem em src/app.ts.
  */
 import type { Request } from "express";
-import { db } from "../database";
+import type { MedicationsRepository } from "../repositories/medications.repository";
 import { getEncounterById } from "./encounters.service";
 import type { CreateMedicationInput } from "../validation/medications.schemas";
 
-type MedicationRow = {
-  id: number;
-  encounter_id: number;
-  medication: string;
-  dosage: string;
-};
+let repository: MedicationsRepository | undefined;
 
-function toMedicationJson(row: MedicationRow) {
-  return {
-    id: row.id,
-    encounterId: row.encounter_id,
-    medication: row.medication,
-    dosage: row.dosage,
-  };
+/** Chamado uma única vez, na montagem (app.ts). */
+export function configureMedicationsRepository(repo: MedicationsRepository) {
+  repository = repo;
 }
 
-const SELECT = "SELECT id, encounter_id, medication, dosage FROM medication_requests";
+function repo(): MedicationsRepository {
+  if (!repository) {
+    // Esquecer a montagem é bug de programação, não do cliente: 500.
+    throw new Error("MedicationsRepository não configurado (veja src/app.ts).");
+  }
+  return repository;
+}
 
 export async function listMedicationsByEncounter(request: Request) {
   const encounterId = Number(request.params.encounterId);
   await getEncounterById(encounterId); // 404 se o atendimento não existe
-
-  const rows = db
-    .prepare(`${SELECT} WHERE encounter_id = ? ORDER BY id`)
-    .all(encounterId) as MedicationRow[];
-
-  return rows.map(toMedicationJson);
+  return repo().findByEncounterId(encounterId);
 }
 
 export async function createMedication(encounterId: number, input: CreateMedicationInput) {
-  await getEncounterById(encounterId);
+  await getEncounterById(encounterId); // 404 se o atendimento não existe
 
-  const result = db
-    .prepare(
-      `INSERT INTO medication_requests (encounter_id, medication, dosage)
-       VALUES (?, ?, ?)`,
-    )
-    .run(encounterId, input.medication, input.dosage);
-
-  const row = db.prepare(`${SELECT} WHERE id = ?`).get(result.lastInsertRowid) as MedicationRow;
-  return toMedicationJson(row);
+  // O atendimento vem da URL e o resto do corpo: aqui os dois viram um
+  // único NewMedicationRequest, campo a campo.
+  return repo().create({
+    encounterId,
+    medication: input.medication,
+    dosage: input.dosage,
+  });
 }
