@@ -1,68 +1,58 @@
 /**
  * Service de Encounter.
  *
- * TODO ARQ-2 — mesmo movimento do ARQ-1: extrair
- * `repositories/encounters.repository.ts` (interface + adapter
- * SQLite) e remover o `import { db }` daqui.
+ * ARQ-2 feito: o SQL saiu daqui e foi para
+ * repositories/sqlite-encounters.repository.ts. Este service conhece
+ * apenas a INTERFACE EncountersRepository (import type) — quem
+ * escolhe a implementação é a montagem em src/app.ts.
  *
  * TODO AUTH-8 — (parte NÃO guiada) quando `professional_id`
  * existir em encounters, `createEncounter` passa a registrar
  * QUEM registrou — e nasce aqui a regra de domínio da matriz
  * de permissões que middleware nenhum resolve sozinho.
  */
-import { db } from "../database";
 import { NotFoundError } from "../errors/HttpError";
+import type { EncountersRepository } from "../repositories/encounters.repository";
 import { getPatientById } from "./patients.service";
 import type { CreateEncounterInput } from "../validation/encounters.schemas";
 
-type EncounterRow = {
-  id: number;
-  patient_id: number;
-  started_at: string;
-  chief_complaint: string;
-  notes: string | null;
-};
+let repository: EncountersRepository | undefined;
 
-function toEncounterJson(row: EncounterRow) {
-  return {
-    id: row.id,
-    patientId: row.patient_id,
-    startedAt: row.started_at,
-    chiefComplaint: row.chief_complaint,
-    notes: row.notes,
-  };
+/** Chamado uma única vez, na montagem (app.ts). */
+export function configureEncountersRepository(repo: EncountersRepository) {
+  repository = repo;
 }
 
-const SELECT = "SELECT id, patient_id, started_at, chief_complaint, notes FROM encounters";
+function repo(): EncountersRepository {
+  if (!repository) {
+    // Esquecer a montagem é bug de programação, não do cliente: 500.
+    throw new Error("EncountersRepository não configurado (veja src/app.ts).");
+  }
+  return repository;
+}
 
 export async function listEncountersByPatient(patientId: number) {
   await getPatientById(patientId); // 404 se o paciente não existe
-
-  // Ordenamos no SQL: o banco tem índice e o dado chega pronto.
-  const rows = db
-    .prepare(`${SELECT} WHERE patient_id = ? ORDER BY started_at DESC`)
-    .all(patientId) as EncounterRow[];
-
-  return rows.map(toEncounterJson);
+  return repo().findByPatientId(patientId);
 }
 
-export function getEncounterById(id: number) {
-  const row = db.prepare(`${SELECT} WHERE id = ?`).get(id) as EncounterRow | undefined;
-  if (!row) {
+export async function getEncounterById(id: number) {
+  const encounter = await repo().findById(id);
+  if (!encounter) {
     throw new NotFoundError("Atendimento não encontrado.");
   }
-  return toEncounterJson(row);
+  return encounter;
 }
 
 export async function createEncounter(patientId: number, input: CreateEncounterInput) {
-  await getPatientById(patientId);
+  await getPatientById(patientId); // 404 se o paciente não existe
 
-  const result = db
-    .prepare(
-      `INSERT INTO encounters (patient_id, started_at, chief_complaint, notes)
-       VALUES (?, ?, ?, ?)`,
-    )
-    .run(patientId, input.startedAt, input.chiefComplaint, input.notes ?? null);
-
-  return getEncounterById(Number(result.lastInsertRowid));
+  // O paciente vem da URL e o resto do corpo: aqui os dois viram um
+  // único NewEncounter. A ausência de conduta é normalizada para null.
+  return repo().create({
+    patientId,
+    startedAt: input.startedAt,
+    chiefComplaint: input.chiefComplaint,
+    notes: input.notes ?? null,
+  });
 }
