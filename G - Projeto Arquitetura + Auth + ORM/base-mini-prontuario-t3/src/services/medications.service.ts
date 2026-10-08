@@ -5,8 +5,11 @@
  * repositories/sqlite-medications.repository.ts. Este service conhece
  * apenas a INTERFACE MedicationsRepository (import type) — quem
  * escolhe a implementação é a montagem em src/app.ts.
+ *
+ * ARQ-5 feito: o service não conhece mais a web. Ele recebe dados
+ * simples (o id do atendimento), e quem os extrai da requisição HTTP
+ * é o controller.
  */
-import type { Request } from "express";
 import type { MedicationsRepository } from "../repositories/medications.repository";
 import { getEncounterById } from "./encounters.service";
 import type { CreateMedicationInput } from "../validation/medications.schemas";
@@ -26,8 +29,7 @@ function repo(): MedicationsRepository {
   return repository;
 }
 
-export async function listMedicationsByEncounter(request: Request) {
-  const encounterId = Number(request.params.encounterId);
+export async function listMedicationsByEncounter(encounterId: number) {
   await getEncounterById(encounterId); // 404 se o atendimento não existe
   return repo().findByEncounterId(encounterId);
 }
