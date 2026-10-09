@@ -1,11 +1,15 @@
 /**
  * Controller de MedicationRequest.
+ * Traduz HTTP <-> domínio: extrai da requisição o que o service
+ * precisa (ids da URL, corpo validado) e entrega só dados simples.
  */
 import type { Request, Response } from "express";
 import * as medicationsService from "../services/medications.service";
 
 export async function listByEncounter(request: Request, response: Response) {
-  const medications = await medicationsService.listMedicationsByEncounter(request);
+  const medications = await medicationsService.listMedicationsByEncounter(
+    Number(request.params.encounterId),
+  );
   response.status(200).json(medications);
 }
 
