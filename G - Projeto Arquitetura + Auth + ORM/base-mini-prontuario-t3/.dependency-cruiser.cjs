@@ -6,16 +6,15 @@
  * INVARIANTES.md: a regra deixou de ser texto (advisório) e
  * virou teste. Rode:  npm run arch
  *
- * O projeto chega com o arch VERMELHO de propósito: existem
- * 2 violações plantadas da Regra da Dependência. Encontrá-las
- * (Encontro 1) e corrigi-las (trilha ARQ) faz parte do curso.
+ * O projeto chegou com o arch VERMELHO de propósito: 2 violações
+ * plantadas da Regra da Dependência, corrigidas no código na
+ * trilha ARQ (ARQ-4 e ARQ-5).
  *
- * TODO ARQ-6 — a régua também evolui: quando os repositories
- * existirem, acrescente aqui a 4ª regra —
- *   "so-repositories-importam-o-driver": error para
- *   from ^src/(?!repositories) com to ^src/database ou @prisma.
- * Hoje ela não existe porque o SQL nos services é o estado
- * DOCUMENTADO de chegada — regra que sempre grita vira ruído.
+ * ARQ-6 feito — a régua evoluiu junto com o código: com a camada
+ * Repository pronta (ARQ-1..3), nasceu a 4ª regra,
+ * "so-repositories-importam-o-driver". Ela só existe agora porque,
+ * antes da camada, ela gritaria em todo service — e regra que
+ * sempre grita vira ruído.
  * ============================================================
  */
 module.exports = {
@@ -43,6 +42,14 @@ module.exports = {
       severity: "error",
       from: { path: "^src/services" },
       to: { path: "^src/(controllers|routes|middlewares)|^node_modules/(express|multer)" },
+    },
+    {
+      name: "so-repositories-importam-o-driver",
+      comment:
+        "Só a camada Repository conhece o driver do banco (src/database hoje, Prisma na trilha ORM). Qualquer outro arquivo que precise de dados pede a um repository — é isso que permite trocar o banco sem que o resto do sistema perceba.",
+      severity: "error",
+      from: { path: "^src/(?!repositories)" },
+      to: { path: "^src/database|^node_modules/@prisma" },
     },
   ],
   options: {
