@@ -1,0 +1,22 @@
+// ============================================================
+// Schema do Prisma — a partir da trilha ORM, a fonte da verdade
+// do esquema do banco (invariante OP1, depois do ORM-5).
+// ------------------------------------------------------------
+// ORM-1: só a conexão e o gerador. Os models chegam no ORM-2,
+// lidos do banco existente com `npx prisma db pull`.
+// ============================================================
+
+// O que gerar: o Prisma Client, no local padrão
+// (node_modules/@prisma/client). NÃO definimos `output`: assim os
+// imports continuam vindo de @prisma/client, que é exatamente o que
+// a regra so-repositories-importam-o-driver (ARQ-6) vigia.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Qual banco usar: SQLite, no caminho do DATABASE_URL do .env
+// (relativo a ESTE arquivo: file:../database/prontuario.db).
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
