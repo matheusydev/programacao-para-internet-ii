@@ -1,0 +1,65 @@
+// ============================================================
+// Schema do Prisma — a partir da trilha ORM, a fonte da verdade
+// do esquema do banco (invariante OP1, depois do ORM-5).
+// ------------------------------------------------------------
+// ORM-2: models lidos do banco existente com `prisma db pull`.
+// ORM-3: nomes traduzidos para o padrão do código (PascalCase nos
+// models, camelCase nos campos). @map/@@map apontam para os nomes
+// REAIS do banco, que não mudam: só o lado do código muda.
+// ============================================================
+
+// O que gerar: o Prisma Client, no local padrão
+// (node_modules/@prisma/client). NÃO definimos `output`: assim os
+// imports continuam vindo de @prisma/client, que é exatamente o que
+// a regra so-repositories-importam-o-driver (ARQ-6) vigia.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Qual banco usar: SQLite, no caminho do DATABASE_URL do .env
+// (relativo a ESTE arquivo: file:../database/prontuario.db).
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// O paciente cadastrado no prontuário.
+model Patient {
+  id         Int         @id @default(autoincrement())
+  name       String
+  birthDate  String      @map("birth_date") // ISO 8601: AAAA-MM-DD
+  // Invariante N1: CNS único. O nome do índice é o que o SQLite deu.
+  nationalId String      @unique(map: "sqlite_autoindex_patients_1") @map("national_id")
+  photoUrl   String?     @map("photo_url")
+  // Fica Int (0/1), como no banco. A tradução para boolean é do adapter.
+  active     Int         @default(1)
+  encounters Encounter[]
+
+  @@map("patients")
+}
+
+/// O atendimento registrado para um paciente.
+model Encounter {
+  id                 Int                 @id @default(autoincrement())
+  patientId          Int                 @map("patient_id")
+  startedAt          String              @map("started_at") // AAAA-MM-DDTHH:MM
+  chiefComplaint     String              @map("chief_complaint")
+  notes              String?
+  patient            Patient             @relation(fields: [patientId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  medicationRequests MedicationRequest[]
+
+  @@index([patientId], map: "idx_encounters_patient")
+  @@map("encounters")
+}
+
+/// A prescrição feita em um atendimento (FHIR: MedicationRequest).
+model MedicationRequest {
+  id          Int       @id @default(autoincrement())
+  encounterId Int       @map("encounter_id")
+  medication  String
+  dosage      String
+  encounter   Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([encounterId], map: "idx_medreq_encounter")
+  @@map("medication_requests")
+}
