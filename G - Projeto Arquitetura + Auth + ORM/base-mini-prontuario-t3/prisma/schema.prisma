@@ -1,22 +1,40 @@
-// ============================================================
-// Schema do Prisma — a partir da trilha ORM, a fonte da verdade
-// do esquema do banco (invariante OP1, depois do ORM-5).
-// ------------------------------------------------------------
-// ORM-1: só a conexão e o gerador. Os models chegam no ORM-2,
-// lidos do banco existente com `npx prisma db pull`.
-// ============================================================
-
-// O que gerar: o Prisma Client, no local padrão
-// (node_modules/@prisma/client). NÃO definimos `output`: assim os
-// imports continuam vindo de @prisma/client, que é exatamente o que
-// a regra so-repositories-importam-o-driver (ARQ-6) vigia.
 generator client {
   provider = "prisma-client-js"
 }
 
-// Qual banco usar: SQLite, no caminho do DATABASE_URL do .env
-// (relativo a ESTE arquivo: file:../database/prontuario.db).
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
+}
+
+model encounters {
+  id                  Int                   @id @default(autoincrement())
+  patient_id          Int
+  started_at          String
+  chief_complaint     String
+  notes               String?
+  patients            patients              @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  medication_requests medication_requests[]
+
+  @@index([patient_id], map: "idx_encounters_patient")
+}
+
+model medication_requests {
+  id           Int        @id @default(autoincrement())
+  encounter_id Int
+  medication   String
+  dosage       String
+  encounters   encounters @relation(fields: [encounter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([encounter_id], map: "idx_medreq_encounter")
+}
+
+model patients {
+  id          Int          @id @default(autoincrement())
+  name        String
+  birth_date  String
+  national_id String       @unique(map: "sqlite_autoindex_patients_1")
+  photo_url   String?
+  active      Int          @default(1)
+  encounters  encounters[]
 }
