@@ -4,9 +4,12 @@
   "private": true,
   "type": "module",
   "description": "Projeto-fio do Topico 3 - Programacao para Internet II (IFPI): camadas, ORM e auth na era do dev com IA",
+  "prisma": {
+    "seed": "tsx scripts/seed.ts"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "db:reset": "tsx scripts/reset-db.ts",
+    "db:reset": "prisma migrate reset --force",
     "check": "tsc --noEmit",
     "arch": "depcruise src --config .dependency-cruiser.cjs",
     "test": "tsx --test tests/*.test.ts",
