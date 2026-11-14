@@ -1,6 +1,7 @@
 import type { Product } from '../../types/product'
 import SearchBar from '../SearchBar/SearchBar'
 import ProductTable from '../ProductTable/ProductTable'
+import styles from './FilterableProductTable.module.css'
 
 interface FilterableProductTableProps {
   products: Product[]
@@ -8,7 +9,7 @@ interface FilterableProductTableProps {
 
 export default function FilterableProductTable({ products }: FilterableProductTableProps) {
   return (
-    <div>
+    <div className={styles.container}>
       <SearchBar />
       <ProductTable products={products} />
     </div>
