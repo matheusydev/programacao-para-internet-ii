@@ -9,12 +9,20 @@ interface FilterableProductTableProps {
 }
 
 export default function FilterableProductTable({ products }: FilterableProductTableProps) {
-  const [filterText] = useState<string>('')
-  const [inStockOnly] = useState<boolean>(false)
+  // Passo 3: o estado mínimo da interface
+  // Passo 4: ele fica aqui, no pai comum de SearchBar e ProductTable
+  const [filterText, setFilterText] = useState<string>('')
+  const [inStockOnly, setInStockOnly] = useState<boolean>(false)
 
   return (
     <div className={styles.container}>
-      <SearchBar filterText={filterText} inStockOnly={inStockOnly} />
+      {/* Passo 5: a SearchBar recebe as funções que mudam o estado do pai */}
+      <SearchBar
+        filterText={filterText}
+        inStockOnly={inStockOnly}
+        onFilterTextChange={setFilterText}
+        onInStockOnlyChange={setInStockOnly}
+      />
       <ProductTable
         products={products}
         filterText={filterText}
