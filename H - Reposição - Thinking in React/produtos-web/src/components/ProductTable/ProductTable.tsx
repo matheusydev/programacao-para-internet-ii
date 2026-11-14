@@ -1,3 +1,4 @@
+import styles from './ProductTable.module.css'
 import type { ReactElement } from 'react'
 import type { Product } from '../../types/product'
 import ProductCategoryRow from '../ProductCategoryRow/ProductCategoryRow'
@@ -23,11 +24,11 @@ export default function ProductTable({ products }: ProductTableProps) {
   })
 
   return (
-    <table>
+    <table className={styles.table}>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Price</th>
+          <th className={styles.header}>Name</th>
+          <th className={`${styles.header} ${styles.price}`}>Price</th>
         </tr>
       </thead>
       <tbody>{rows}</tbody>
