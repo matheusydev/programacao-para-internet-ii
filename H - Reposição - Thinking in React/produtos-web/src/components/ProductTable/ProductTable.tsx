@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import type { Product } from '../../types/product'
 import ProductCategoryRow from '../ProductCategoryRow/ProductCategoryRow'
 import ProductRow from '../ProductRow/ProductRow'
@@ -7,7 +8,19 @@ interface ProductTableProps {
 }
 
 export default function ProductTable({ products }: ProductTableProps) {
-  const exemplo = products[0]
+  const rows: ReactElement[] = []
+  let lastCategory: string | null = null
+
+  products.forEach((product) => {
+    // quando a categoria muda, insere uma linha de título antes do produto
+    if (product.category !== lastCategory) {
+      rows.push(
+        <ProductCategoryRow category={product.category} key={product.category} />,
+      )
+    }
+    rows.push(<ProductRow product={product} key={product.name} />)
+    lastCategory = product.category
+  })
 
   return (
     <table>
@@ -17,10 +30,7 @@ export default function ProductTable({ products }: ProductTableProps) {
           <th>Price</th>
         </tr>
       </thead>
-      <tbody>
-        <ProductCategoryRow category={exemplo.category} />
-        <ProductRow product={exemplo} />
-      </tbody>
+      <tbody>{rows}</tbody>
     </table>
   )
 }
