@@ -6,13 +6,24 @@ import ProductRow from '../ProductRow/ProductRow'
 
 interface ProductTableProps {
   products: Product[]
+  filterText: string
+  inStockOnly: boolean
 }
 
-export default function ProductTable({ products }: ProductTableProps) {
+export default function ProductTable({ products, filterText, inStockOnly }: ProductTableProps) {
   const rows: ReactElement[] = []
   let lastCategory: string | null = null
 
   products.forEach((product) => {
+    // filtro 1: o nome precisa conter o texto da busca (sem diferenciar maiúsculas)
+    if (!product.name.toLowerCase().includes(filterText.toLowerCase())) {
+      return
+    }
+    // filtro 2: se o checkbox estiver marcado, pula quem está fora de estoque
+    if (inStockOnly && !product.stocked) {
+      return
+    }
+
     // quando a categoria muda, insere uma linha de título antes do produto
     if (product.category !== lastCategory) {
       rows.push(
