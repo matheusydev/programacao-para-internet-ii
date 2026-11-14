@@ -1,11 +1,21 @@
 import styles from './SearchBar.module.css'
 
-export default function SearchBar() {
+interface SearchBarProps {
+  filterText: string
+  inStockOnly: boolean
+}
+
+export default function SearchBar({ filterText, inStockOnly }: SearchBarProps) {
   return (
     <form className={styles.form}>
-      <input className={styles.input} type="text" placeholder="Search..." />
+      <input
+        className={styles.input}
+        type="text"
+        value={filterText}
+        placeholder="Search..."
+      />
       <label className={styles.checkbox}>
-        <input type="checkbox" /> Only show products in stock
+        <input type="checkbox" checked={inStockOnly} /> Only show products in stock
       </label>
     </form>
   )
