@@ -1,32 +1,59 @@
-# React + TypeScript + Vite
+# produtos-web
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Tabela de produtos pesquisável feita com **React + TypeScript + Vite**, seguindo o exemplo
+["Thinking in React"](https://react.dev/learn/thinking-in-react) da documentação oficial do React.
 
-Currently, two official plugins are available:
+Atividade de reposição de feriado — TADS / IFPI.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Link da aplicação
 
-## React Compiler
+🔗 **Deploy:** <https://produtos-web-gamma.vercel.app/>
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Funcionalidades
 
-## Expanding the Oxlint configuration
+- Lista de produtos agrupada por categoria
+- Busca por nome (ignora maiúsculas e minúsculas)
+- Filtro "Only show products in stock" (apenas em estoque)
+- Produtos sem estoque aparecem em vermelho
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Tecnologias
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+- [React](https://react.dev/) 19
+- [TypeScript](https://www.typescriptlang.org/) (totalmente tipado)
+- [Vite](https://vite.dev/) 8
+- CSS Modules
+
+## Estrutura de componentes
+
+```
+FilterableProductTable
+├── SearchBar
+└── ProductTable
+    ├── ProductCategoryRow
+    └── ProductRow
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Como rodar localmente
+
+Pré-requisito: Node.js 20.19+ (ou 22.12+).
+
+```bash
+git clone https://github.com/matheusydev/programacao-para-internet-ii.git
+cd "programacao-para-internet-ii/H - Reposição - Thinking in React(Guilherme)/produtos-web"
+npm install
+npm run dev
+```
+
+Acesse http://localhost:5173
+
+## Scripts
+
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | Servidor de desenvolvimento |
+| `npm run build` | Verifica tipos e gera a pasta `dist` |
+| `npm run preview` | Testa o build localmente |
+
+## Autor
+
+<Guilherme Alves Barbosa> — [GitHub](https://github.com/Guilherme-sta)
