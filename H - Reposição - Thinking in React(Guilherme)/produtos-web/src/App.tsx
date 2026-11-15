@@ -1,3 +1,6 @@
+import FilterableProductTable from './components/FilterableProductTable';
+import { PRODUCTS } from './data/products';
+
 export default function App() {
-  return <h1>produtos-web</h1>;
+  return <FilterableProductTable products={PRODUCTS} />;
 }
