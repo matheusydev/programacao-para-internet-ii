@@ -56,4 +56,4 @@ Acesse http://localhost:5173
 
 ## Autor
 
-<Guilherme Alves Barbosa> — [GitHub](https://github.com/Guilherme-sta)
+<Guilherme Alves Barbosa> — [Guilherme Alves Barbosa](https://github.com/Guilherme-sta)
