@@ -6,14 +6,28 @@ import styles from './ProductTable.module.css';
 
 interface ProductTableProps {
   products: Product[];
+  filterText: string;
+  inStockOnly: boolean;
 }
 
-export default function ProductTable({ products }: ProductTableProps) {
+export default function ProductTable({
+  products,
+  filterText,
+  inStockOnly,
+}: ProductTableProps) {
   const rows: ReactNode[] = [];
   let lastCategory: string | null = null;
 
   products.forEach((product) => {
-    // Quando a categoria muda, insere uma linha de título antes
+    // 1) Filtro de texto (ignora maiúsculas/minúsculas)
+    if (!product.name.toLowerCase().includes(filterText.toLowerCase())) {
+      return;
+    }
+    // 2) Filtro "apenas em estoque"
+    if (inStockOnly && !product.stocked) {
+      return;
+    }
+
     if (product.category !== lastCategory) {
       rows.push(
         <ProductCategoryRow

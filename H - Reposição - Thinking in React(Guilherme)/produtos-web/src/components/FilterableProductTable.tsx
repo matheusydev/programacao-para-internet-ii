@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Product } from '../types';
 import SearchBar from './SearchBar';
 import ProductTable from './ProductTable';
@@ -10,10 +11,17 @@ interface FilterableProductTableProps {
 export default function FilterableProductTable({
   products,
 }: FilterableProductTableProps) {
+  const [filterText, setFilterText] = useState<string>('');
+  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
+
   return (
     <div className={styles.container}>
-      <SearchBar />
-      <ProductTable products={products} />
+      <SearchBar filterText={filterText} inStockOnly={inStockOnly} />
+      <ProductTable
+        products={products}
+        filterText={filterText}
+        inStockOnly={inStockOnly}
+      />
     </div>
   );
 }
